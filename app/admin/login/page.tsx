@@ -1,15 +1,19 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { login } from './actions'
 
 export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null)
+  const [diagnostic, setDiagnostic] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setDiagnostic(null)
 
     const formData = new FormData(event.currentTarget)
 
@@ -18,6 +22,7 @@ export default function AdminLoginPage() {
 
       if (result?.error) {
         setError(result.error)
+        setDiagnostic(result.diagnostic ?? null)
       }
     })
   }
@@ -45,10 +50,18 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
-        {/* رسالة الخطأ */}
+        {/* رسالة الخطأ والتشخيص */}
         {error && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm rounded-xl p-3 text-center">
-            {error}
+          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm rounded-xl p-3 text-center space-y-1.5">
+            <div>{error}</div>
+            {diagnostic && (
+              <div
+                className="text-[11px] opacity-85 font-mono pt-1.5 border-t border-rose-500/20 text-start"
+                dir="rtl"
+              >
+                {diagnostic}
+              </div>
+            )}
           </div>
         )}
 
@@ -77,14 +90,29 @@ export default function AdminLoginPage() {
               كلمة المرور
             </label>
 
-            <input
-              type="password"
-              name="password"
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              className="w-full h-10 px-3.5 rounded-lg bg-background border border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition text-start text-sm"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                required
+                autoComplete="current-password"
+                placeholder="••••••••"
+                className="w-full h-10 px-3.5 pl-10 rounded-lg bg-background border border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition text-start text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded focus:outline-none"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
 
           <button
