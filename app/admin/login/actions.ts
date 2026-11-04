@@ -4,8 +4,15 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
 export async function login(formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+  const rawEmail = formData.get('email')
+  const rawPassword = formData.get('password')
+
+  if (typeof rawEmail !== 'string' || typeof rawPassword !== 'string') {
+    return { error: 'يرجى إدخال البريد الإلكتروني وكلمة المرور' }
+  }
+
+  const email = rawEmail.trim().toLowerCase()
+  const password = rawPassword
 
   if (!email || !password) {
     return { error: 'يرجى إدخال البريد الإلكتروني وكلمة المرور' }

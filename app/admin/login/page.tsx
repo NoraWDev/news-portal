@@ -63,6 +63,10 @@ export default function AdminLoginPage() {
               type="email"
               name="email"
               required
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              autoComplete="username"
               placeholder="admin@ajras.net"
               className="w-full h-10 px-3.5 rounded-lg bg-background border border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition text-start text-sm"
             />
@@ -77,6 +81,7 @@ export default function AdminLoginPage() {
               type="password"
               name="password"
               required
+              autoComplete="current-password"
               placeholder="••••••••"
               className="w-full h-10 px-3.5 rounded-lg bg-background border border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition text-start text-sm"
             />
