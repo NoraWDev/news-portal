@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
-import { getFeaturedArticle, getLatestArticles, getMostReadArticles, getFeaturedVideo, getLatestVideos } from '@/lib/data/home';
+import { getFeaturedArticle, getLatestArticles, getMostReadArticles, getFeaturedVideo, getLatestVideos, type ArticleWithCategory, type VideoWithCategory } from '@/lib/data/home';
 
 export default async function Home() {
   const [featuredArticle, latestArticles, mostReadArticles, featuredVideo, latestVideos] = await Promise.all([
@@ -210,7 +210,7 @@ export default async function Home() {
               </div>
 
               <div className="px-4 md:px-5">
-                {latestArticles.length > 0 ? latestArticles.map((article) => (
+                {latestArticles.length > 0 ? latestArticles.map((article: ArticleWithCategory) => (
                   <article key={article.id.toString()} className="flex flex-row items-start gap-4 md:gap-5 py-4 border-b border-gray-200 last:border-b-0">
                     <img
                       src={article.featured_image || "/news-government.png"}
@@ -329,7 +329,7 @@ export default async function Home() {
 
                 {/* الفيديوهات الجانبية */}
                 <div className="flex flex-col gap-3 justify-between">
-                  {latestVideos.length > 0 ? latestVideos.map((video) => (
+                  {latestVideos.length > 0 ? latestVideos.map((video: VideoWithCategory) => (
                     <Link key={video.id.toString()} href={`/video/${video.id}`} className="block group">
                       <article className="flex flex-row gap-3 p-2.5 rounded-xl border border-white/20 bg-[#0f1014]/90 hover:border-[#5c131d] transition duration-300 items-center">
                         <div className="relative w-[120px] sm:w-[140px] aspect-[16/10] shrink-0 overflow-hidden rounded-lg bg-black">

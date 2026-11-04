@@ -1,4 +1,14 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+
+// أنواع صريحة مشتقة من Prisma تشمل العلاقات
+export type ArticleWithCategory = Prisma.articlesGetPayload<{
+  include: { category: true };
+}>;
+
+export type VideoWithCategory = Prisma.videosGetPayload<{
+  include: { category: true };
+}>;
 
 export async function getFeaturedArticle() {
   return prisma.articles.findFirst({
