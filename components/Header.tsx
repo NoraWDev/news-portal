@@ -94,14 +94,14 @@ export default function Header() {
   return (
     <header dir="rtl" className="w-full text-white font-sans">
       {/* 1. الشريط العلوي */}
-      <div className="bg-[#0c0d0e] text-[11px] sm:text-xs md:text-sm font-medium py-1.5 px-3 sm:px-6 lg:px-8 border-b border-neutral-800 flex flex-row-reverse justify-between items-center text-gray-400">
+      <div className="bg-[#0c0d0e] text-[10px] sm:text-xs md:text-sm font-medium py-1 sm:py-1.5 px-3 sm:px-6 lg:px-8 border-b border-neutral-800 flex flex-row-reverse justify-between items-center text-gray-400">
         <div className="flex flex-row-reverse items-center gap-1.5 sm:gap-2 min-w-0">
-          <FaPenNib className="text-[#7a1a26] text-xs sm:text-sm shrink-0" />
+          <FaPenNib className="text-[#7a1a26] text-[10px] sm:text-sm shrink-0" />
           <span className="truncate">رئيس التحرير : <strong className="text-white font-semibold">أيوب التميمي</strong></span>
         </div>
 
         <div className="flex flex-row-reverse items-center gap-1.5 sm:gap-2 shrink-0">
-          <FaCalendarAlt className="text-[#7a1a26] text-xs sm:text-sm shrink-0" />
+          <FaCalendarAlt className="text-[#7a1a26] text-[10px] sm:text-sm shrink-0" />
           <span className="whitespace-nowrap">السبت 12 سبتمبر 2026</span>
         </div>
 
@@ -112,7 +112,7 @@ export default function Header() {
       </div>
 
       {/* 2. الهيدر الرئيسي مع خلفية العلم يميناً وخريطة العالم يساراً */}
-      <div className="relative w-full h-[110px] sm:h-[135px] md:h-[150px] overflow-hidden border-b border-neutral-800 bg-[#000000] flex items-center justify-center">
+      <div className="relative w-full h-[95px] sm:h-[120px] md:h-[140px] lg:h-[150px] overflow-hidden border-b border-neutral-800 bg-[#000000] flex items-center justify-center">
         
         {/* صورة العلم والبيئة اليمنية على الجانب الأيمن */}
         <div className="absolute top-0 right-0 h-full w-2/5 sm:w-1/3 pointer-events-none z-0 overflow-hidden">
@@ -141,13 +141,13 @@ export default function Header() {
         </div>
 
         {/* الشعار والعبارة الفرعية بالمنتصف */}
-        <Link href="/" className="relative z-10 flex flex-col items-center justify-center text-center cursor-pointer group -mt-1 sm:-mt-2 px-2">
+        <Link href="/" className="relative z-10 flex flex-col items-center justify-center text-center cursor-pointer group px-2">
           <img 
             src="/agras-bg.png" 
             alt="أجراس اليمن الإخبارية" 
-            className="h-16 sm:h-22 md:h-26 lg:h-28 w-auto object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] transition-transform duration-300 group-hover:scale-[1.01]"
+            className="h-14 sm:h-20 md:h-24 lg:h-28 w-auto object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] transition-transform duration-300 group-hover:scale-[1.01]"
           />
-          <p className="mt-1 text-[10px] sm:text-xs md:text-sm font-medium tracking-wide text-gray-200/95 text-center whitespace-nowrap leading-none drop-shadow-md">
+          <p className="mt-0.5 sm:mt-1 text-[9px] sm:text-xs md:text-sm font-medium tracking-wide text-gray-200/95 text-center whitespace-nowrap leading-none drop-shadow-md">
             مصداقية • سرعة • من قلب اليمن إلى العالم
           </p>
         </Link>
@@ -232,25 +232,25 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* 3. شريط الأقسام المخصص للجوال والتابلت (Mobile Navigation Bar) */}
-      <nav className="lg:hidden bg-[#090a0d] border-b border-[#5c131d]/40 px-3 sm:px-4 py-2" dir="rtl">
-        <div className="flex items-center justify-between gap-2">
+      {/* 3. شريط الأقسام المخصص للجوال والتابلت (Mobile Navigation Bar: أنيق ومدمج ومتوازن) */}
+      <nav className="lg:hidden bg-[#090a0d] border-b border-[#5c131d]/40 px-2.5 sm:px-4 py-1.5" dir="rtl">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* زر فتح القائمة الجانبية Hamburger */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(true)}
-            className="flex items-center gap-2 bg-[#17181d] hover:bg-[#7a1a26] active:scale-95 text-white px-3 py-1.5 rounded-lg border border-neutral-700/80 hover:border-[#7a1a26] transition text-xs font-bold shrink-0 cursor-pointer"
+            className="flex items-center gap-1.5 bg-[#17181d] hover:bg-[#7a1a26] active:scale-95 text-white px-2.5 py-1 rounded-md border border-neutral-700/80 hover:border-[#7a1a26] transition text-[11px] font-bold shrink-0 cursor-pointer"
             aria-label="فتح القائمة الرئيسية"
           >
-            <FaBars className="text-sm text-[#d4737f]" />
+            <FaBars className="text-xs text-[#d4737f]" />
             <span>الأقسام</span>
           </button>
 
-          {/* روابط وصول سريع قابلة للتمرير برفق */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-1 text-xs">
+          {/* روابط وصول سريع قابلة للتمرير برفق وخفة */}
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 px-0.5 text-xs">
             <Link
               href="/"
-              className="whitespace-nowrap px-2.5 py-1 rounded-md text-white font-bold bg-[#7a1a26] text-[11px]"
+              className="whitespace-nowrap px-2 py-0.5 rounded text-white font-bold bg-[#7a1a26] text-[10px] sm:text-[11px]"
             >
               الرئيسية
             </Link>
@@ -258,7 +258,7 @@ export default function Header() {
               <Link
                 key={idx}
                 href={`/category/${cat.slug}`}
-                className="whitespace-nowrap px-2 py-1 rounded-md text-gray-300 hover:text-white hover:bg-neutral-800 text-[11px] font-semibold transition"
+                className="whitespace-nowrap px-1.5 py-0.5 rounded text-gray-300 hover:text-white hover:bg-neutral-800 text-[10px] sm:text-[11px] font-medium transition"
               >
                 {cat.name}
               </Link>
@@ -269,29 +269,29 @@ export default function Header() {
           <button
             type="button"
             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition shrink-0 cursor-pointer border ${
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md flex items-center justify-center transition shrink-0 cursor-pointer border ${
               isMobileSearchOpen 
                 ? 'bg-[#7a1a26] text-white border-[#7a1a26]' 
                 : 'bg-[#17181d] text-gray-300 border-neutral-700 hover:text-white'
             }`}
             aria-label="البحث"
           >
-            <FaSearch className="text-xs" />
+            <FaSearch className="text-[11px]" />
           </button>
         </div>
 
         {/* حقل البحث السريع المنسدل */}
         {isMobileSearchOpen && (
-          <div className="mt-2 pt-2 border-t border-neutral-800">
+          <div className="mt-1.5 pt-1.5 border-t border-neutral-800">
             <div className="relative w-full">
               <input
                 type="text"
                 dir="rtl"
                 placeholder="ابحث عن خبر، مقال، أو موضوع..."
-                className="w-full bg-[#14151a] border border-[#5c131d]/70 rounded-lg py-2 pr-3 pl-8 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#7a1a26]"
+                className="w-full bg-[#14151a] border border-[#5c131d]/70 rounded-md py-1.5 pr-2.5 pl-8 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#7a1a26]"
                 autoFocus
               />
-              <FaSearch className="absolute left-3 top-2.5 text-gray-400 text-xs" />
+              <FaSearch className="absolute left-2.5 top-2 text-gray-400 text-xs" />
             </div>
           </div>
         )}
@@ -429,29 +429,29 @@ export default function Header() {
         </div>
       )}
 
-      {/* 4. شريط الأخبار العاجلة */}
+      {/* 4. شريط الأخبار العاجلة (مدمج ورشيق على الجوال، ويحافظ على أبعاده للكمبيوتر) */}
       <div className="bg-[#f8fafc] text-gray-900" dir="rtl">
-        <div className="py-2.5 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6">
+        <div className="py-1 sm:py-2 md:py-4 px-2 sm:px-4 md:px-6">
           <div className="max-w-7xl mx-auto bg-[#7a1a26] flex items-center text-white shadow-sm rounded-md overflow-hidden">
-            <div className="bg-[#000000] px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <FaBolt className="text-[#f9f9f9] animate-pulse text-sm sm:text-base md:text-xl" />
-              <span className="text-white font-extrabold text-base sm:text-xl md:text-2xl">عاجل</span>
+            <div className="bg-[#000000] px-2.5 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <FaBolt className="text-[#f9f9f9] animate-pulse text-xs sm:text-base md:text-xl" />
+              <span className="text-white font-extrabold text-xs sm:text-base md:text-2xl">عاجل</span>
             </div>
             
             <div className="flex-1 overflow-hidden px-2 sm:px-4 relative flex items-center">
               <div className="whitespace-nowrap inline-block animate-[marquee_25s_linear_infinite] hover:[animation-play-state:paused]">
-                <span className="text-xs sm:text-sm md:text-lg font-semibold text-white px-2 sm:px-4">
+                <span className="text-[11px] sm:text-sm md:text-lg font-semibold text-white px-2 sm:px-4">
                   الحكومة اليمنية تؤكد استمرار جهودها لتحقيق السلام الشامل في اليمن
                 </span>
                 <span className="text-white font-bold opacity-70">|</span>
-                <span className="text-xs sm:text-sm md:text-lg font-semibold text-white px-2 sm:px-4">
+                <span className="text-[11px] sm:text-sm md:text-lg font-semibold text-white px-2 sm:px-4">
                   الجيش اليمني يعلن تنفيذ عملية نوعية ضد مواقع للحوثيين في الجوف
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1 px-2 sm:px-3 border-l border-black/40 shrink-0">
-              <button className="p-1 hover:bg-black/30 rounded transition text-xs sm:text-sm" aria-label="التالي">
+            <div className="flex items-center gap-1 px-1.5 sm:px-2 md:px-3 border-l border-black/40 shrink-0">
+              <button className="p-0.5 sm:p-1 hover:bg-black/30 rounded transition text-xs sm:text-sm" aria-label="التالي">
                 <FaChevronLeft />
               </button>
             </div>
