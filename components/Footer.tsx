@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import {
   FaFacebookF,
-  FaYoutube,
+  FaWhatsapp,
   FaTelegramPlane,
   FaInstagram,
   FaPhone,
@@ -17,6 +17,14 @@ import {
 export default function Footer() {
   const socialClass =
     'w-8 h-8 rounded-full border border-[#7a1a26]/80 flex items-center justify-center text-xs hover:bg-[#7a1a26] hover:text-white transition';
+
+  const socialLinks = [
+    { Icon: FaXTwitter, href: '#', label: 'إكس' },
+    { Icon: FaFacebookF, href: 'https://www.facebook.com/share/19DaAxy4Za/', label: 'فيسبوك' },
+    { Icon: FaWhatsapp, href: 'https://chat.whatsapp.com/I1IbYuzlLXgJuUOf2Uok4K?s=sh&p=a&iam=2', label: 'واتساب' },
+    { Icon: FaTelegramPlane, href: 'https://t.me/+U-QOQTuWUJ9xk0qB', label: 'تليجرام' },
+    { Icon: FaInstagram, href: '#', label: 'إنستغرام' },
+  ];
 
   return (
     <footer
@@ -93,7 +101,7 @@ export default function Footer() {
             <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-gray-400">
               <FaPenNib className="text-[#7a1a26] text-[10px]" />
               <span>برمجة المهندسة</span>
-              <span className="font-bold text-white">نورا أيوب التميمي</span>
+              <span className="font-bold text-white">نورا التميمي</span>
             </div>
           </div>
 
@@ -115,11 +123,18 @@ export default function Footer() {
               <h3 className="text-xs font-bold text-white">تابعنا على</h3>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <a href="#" aria-label="إكس" className={socialClass}><FaXTwitter /></a>
-              <a href="#" aria-label="فيسبوك" className={socialClass}><FaFacebookF /></a>
-              <a href="#" aria-label="يوتيوب" className={socialClass}><FaYoutube /></a>
-              <a href="#" aria-label="تليجرام" className={socialClass}><FaTelegramPlane /></a>
-              <a href="#" aria-label="إنستغرام" className={socialClass}><FaInstagram /></a>
+              {socialLinks.map(({ Icon, href, label }, idx) => (
+                <a
+                  key={idx}
+                  href={href}
+                  target={href !== '#' ? '_blank' : undefined}
+                  rel={href !== '#' ? 'noopener noreferrer' : undefined}
+                  aria-label={label}
+                  className={socialClass}
+                >
+                  <Icon />
+                </a>
+              ))}
             </div>
           </div>
         </div>

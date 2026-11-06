@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 
 import { 
   FaFacebookF, 
-  FaYoutube, 
+  FaWhatsapp, 
   FaTelegramPlane, 
   FaInstagram, 
   FaSearch, 
@@ -40,6 +40,14 @@ export default function Header() {
     { name: 'تكنلوجيا', slug: 'local' },
     { name: 'محافظات', slug: 'governorates' },
     { name: 'تحقيقات  ', slug: 'special' },
+  ];
+
+  const socialLinks = [
+    { Icon: FaXTwitter, href: '#', label: 'إكس' },
+    { Icon: FaFacebookF, href: 'https://www.facebook.com/share/19DaAxy4Za/', label: 'فيسبوك' },
+    { Icon: FaWhatsapp, href: 'https://chat.whatsapp.com/I1IbYuzlLXgJuUOf2Uok4K?s=sh&p=a&iam=2', label: 'واتساب' },
+    { Icon: FaTelegramPlane, href: 'https://t.me/+U-QOQTuWUJ9xk0qB', label: 'تليجرام' },
+    { Icon: FaInstagram, href: '#', label: 'إنستغرام' },
   ];
 
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -148,16 +156,13 @@ export default function Header() {
         <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 left-3 sm:left-6 md:left-8 z-20 pointer-events-auto">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 bg-[#121316]/90 backdrop-blur-md p-1 sm:p-1.5 rounded-full border border-neutral-700/80 shadow-2xl">
             <div className="flex items-center gap-1">
-              {[
-                { Icon: FaXTwitter, href: '#' },
-                { Icon: FaFacebookF, href: '#' },
-                { Icon: FaYoutube, href: '#' },
-                { Icon: FaTelegramPlane, href: '#' },
-                { Icon: FaInstagram, href: '#' },
-              ].map(({ Icon, href }, idx) => (
+              {socialLinks.map(({ Icon, href, label }, idx) => (
                 <a 
                   key={idx} 
                   href={href} 
+                  target={href !== '#' ? '_blank' : undefined}
+                  rel={href !== '#' ? 'noopener noreferrer' : undefined}
+                  aria-label={label}
                   className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-neutral-700 bg-[#1c1d22] flex items-center justify-center text-gray-200 hover:bg-neutral-100 hover:text-black transition"
                 >
                   <Icon className="text-xs sm:text-sm" />
@@ -307,7 +312,7 @@ export default function Header() {
             {/* هيدر القائمة */}
             <div className="flex items-center justify-between p-4 border-b border-neutral-800 bg-[#07080a]">
               <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="أجراس اليمن" className="h-7 w-auto object-contain" />
+                <img src="/agras-bg.png" alt="أجراس اليمن" className="h-7 w-auto object-contain" />
                 <span className="text-sm font-black text-white">أجراس اليمن الإخبارية</span>
               </div>
               <button
@@ -405,16 +410,13 @@ export default function Header() {
             <div className="p-3 border-t border-neutral-800 bg-[#07080a] flex items-center justify-between">
               <span className="text-[10px] text-gray-400 font-semibold">تابعنا:</span>
               <div className="flex items-center gap-1.5">
-                {[
-                  { Icon: FaXTwitter, href: '#' },
-                  { Icon: FaFacebookF, href: '#' },
-                  { Icon: FaYoutube, href: '#' },
-                  { Icon: FaTelegramPlane, href: '#' },
-                  { Icon: FaInstagram, href: '#' },
-                ].map(({ Icon, href }, idx) => (
+                {socialLinks.map(({ Icon, href, label }, idx) => (
                   <a
                     key={idx}
                     href={href}
+                    target={href !== '#' ? '_blank' : undefined}
+                    rel={href !== '#' ? 'noopener noreferrer' : undefined}
+                    aria-label={label}
                     className="w-7 h-7 rounded-full border border-neutral-700 bg-[#16171c] flex items-center justify-center text-gray-300 hover:bg-[#7a1a26] hover:text-white transition text-xs"
                   >
                     <Icon />

@@ -28,8 +28,9 @@ export default async function Home() {
           {/* ================= الإعلانات - يسار في الديسكتوب، وأسفل الخبر في الجوال ================= */}
           <aside className="order-2 lg:order-2 flex flex-col gap-3">
             {ads.map((ad) => (
-              <div
+              <Link
                 key={ad}
+                href="/advertise"
                 className="
                   relative
                   h-[95px]
@@ -41,7 +42,11 @@ export default async function Home() {
                   rounded-xl
                   bg-[#08090b]
                   border border-[#5c131d]/50
+                  hover:border-[#7a1a26]
+                  transition
                   shadow-[0_4px_15px_rgba(0,0,0,0.12)]
+                  block
+                  group
                 "
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#0e0f13] via-[#08090b] to-[#020304]" />
@@ -86,21 +91,28 @@ export default async function Home() {
                 <div className="relative z-10 h-full flex flex-col items-center justify-center p-2 text-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/logo.png"
-                    alt=""
+                    src="/agras-bg.png"
+                    alt="أجراس اليمن"
                     className="
-                      w-[45px]
-                      sm:w-[55px]
-                      md:w-[65px]
+                      w-[48px]
+                      sm:w-[58px]
+                      md:w-[68px]
                       h-auto
                       object-contain
+                      drop-shadow-md
+                      group-hover:scale-105
+                      transition-transform
+                      duration-300
                     "
                   />
                   <div className="text-white text-[10px] sm:text-[11px] md:text-xs font-bold mt-1">
-                    مساحة إعلانية
+                    مساحتك الإعلانية هنا
                   </div>
+                  <span className="text-[#d4737f] text-[9px] font-semibold mt-0.5 group-hover:text-white transition">
+                    أعلن معنا ←
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </aside>
 
@@ -187,7 +199,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ================= المحتوى الأوسط (أحدث الأخبار + الأكثر قراءة للجوال + الفيديوهات) ================= */}
+      {/* ================= المحتوى الأوسط (أحدث الأخبار + الأكثر قراءة للجوال + الفيديوهات + أعلن معنا للجوال) ================= */}
       <section
         className="max-w-[1400px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6"
         dir="rtl"
@@ -433,6 +445,49 @@ export default async function Home() {
               </div>
             </div>
 
+            {/* ================= قسم أعلن معنا (يظهر في الجوال والتابلت هنا بتصميم مناسب وسهل الضغط) ================= */}
+            <div className="lg:hidden">
+              <section className="relative overflow-hidden rounded-xl bg-[#08090b] border border-[#5c131d]/50 shadow-sm p-4 sm:p-5 text-right">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#0e0f13] via-[#08090b] to-[#020304]" />
+                <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-[#7a1a26]/15 blur-2xl pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3 mb-3">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h2 className="text-white text-lg sm:text-xl font-black">أعلن معنا</h2>
+                        <span className="text-[#7a1a26] text-xl font-black">+</span>
+                      </div>
+                      <p className="text-gray-300 text-xs font-semibold mt-0.5">وصل إعلانك إلى جمهور واسع في اليمن والعالم</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-lg bg-black/60 border border-neutral-700/60 flex items-center justify-center shrink-0">
+                      <span className="text-white text-2xl">📣</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center py-1">
+                    <div className="bg-[#121318] p-2 rounded-lg border border-white/5">
+                      <div className="text-[#d4737f] text-base mb-0.5">✦</div>
+                      <span className="text-white text-[10px] font-bold block">مواقع إخبارية</span>
+                    </div>
+                    <div className="bg-[#121318] p-2 rounded-lg border border-white/5">
+                      <div className="text-[#d4737f] text-base mb-0.5">◉</div>
+                      <span className="text-white text-[10px] font-bold block">جمهور مستهدف</span>
+                    </div>
+                    <div className="bg-[#121318] p-2 rounded-lg border border-white/5">
+                      <div className="text-[#d4737f] text-base mb-0.5">✥</div>
+                      <span className="text-white text-[10px] font-bold block">أعلى مصداقية</span>
+                    </div>
+                  </div>
+                  <Link
+                    href="/advertise"
+                    className="mt-3.5 w-full flex items-center justify-center gap-2 bg-[#7a1a26] hover:bg-[#5c131d] active:scale-[0.98] text-white py-2.5 rounded-lg text-xs font-black shadow-md transition"
+                  >
+                    ابدأ الآن
+                    <span>←</span>
+                  </Link>
+                </div>
+              </section>
+            </div>
+
             {/* ================= مساحة إعلانية كبرى تحت الفيديوهات ================= */}
             <section className="w-full" dir="rtl">
               <div className="
@@ -462,19 +517,22 @@ export default async function Home() {
                 <div className="relative z-10 flex flex-col items-center justify-center text-center px-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/logo.png"
+                    src="/agras-bg.png"
                     alt="أجراس اليمن الإخبارية"
-                    className="w-[45px] sm:w-[55px] md:w-[65px] h-auto object-contain mb-1.5 opacity-90 group-hover:scale-105 transition-transform duration-300"
+                    className="w-[60px] sm:w-[75px] md:w-[90px] h-auto object-contain mb-1.5 opacity-90 group-hover:scale-105 transition-transform duration-300"
                   />
                   <h3 className="text-white text-sm sm:text-base md:text-xl font-black tracking-wide">
-                    مساحة إعلانية كبرى
+                    مساحة إعلانية كبرى — مساحتك الإعلانية هنا
                   </h3>
                   <p className="text-gray-300 text-[11px] sm:text-xs md:text-sm mt-1 max-w-md">
                     اجعل إعلانك التجاري يظهر هنا بمساحة بارزة وواسعة لزوار موقع أجراس اليمن الإخبارية.
                   </p>
-                  <span className="mt-2.5 sm:mt-3 inline-block bg-[#7a1a26] text-white px-4 py-1 rounded-md text-[11px] sm:text-xs font-black shadow-md cursor-pointer hover:bg-[#5c131d] transition">
+                  <Link
+                    href="/advertise"
+                    className="mt-2.5 sm:mt-3 inline-block bg-[#7a1a26] hover:bg-[#5c131d] text-white px-5 py-1.5 rounded-md text-[11px] sm:text-xs font-black shadow-md transition"
+                  >
                     احجز مساحتك الآن ←
-                  </span>
+                  </Link>
                 </div>
               </div>
             </section>
