@@ -3,6 +3,8 @@ import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { getFeaturedArticle, getLatestArticles, getMostReadArticles, getFeaturedVideo, getLatestVideos, type ArticleWithCategory, type VideoWithCategory } from '@/lib/data/home';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const [featuredArticle, latestArticles, mostReadArticles, featuredVideo, latestVideos] = await Promise.all([
     getFeaturedArticle(),
