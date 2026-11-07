@@ -24,22 +24,22 @@ import { FaXTwitter } from 'react-icons/fa6';
 
 export default function Header() {
   const categories = [
-    { name: 'سياسه', slug: 'yemen' },
-    { name: 'محليات', slug: 'politics' },
+    { name: 'سياسة', slug: 'politics' },
+    { name: 'محليات', slug: 'local' },
     { name: 'اقتصاد', slug: 'economy' },
-    { name: ' دولي ', slug: 'world' },
-    { name: 'ثقافه', slug: 'tech' },
-    { name: 'قضايا ', slug: 'sports' },
-    { name: 'التقارير', slug: 'health' },
+    { name: 'دولي', slug: 'world' },
+    { name: 'ثقافة', slug: 'culture' },
+    { name: 'قضايا', slug: 'issues' },
+    { name: 'التقارير', slug: 'reports' },
   ];
   
   const moreCategories = [
     { name: 'الصحة', slug: 'health' },
     { name: 'المجتمع', slug: 'society' },
-    { name: 'رياضه', slug: 'variety' },
-    { name: 'تكنلوجيا', slug: 'local' },
+    { name: 'الرياضة', slug: 'sports' },
+    { name: 'تكنولوجيا', slug: 'technology' },
     { name: 'محافظات', slug: 'governorates' },
-    { name: 'تحقيقات  ', slug: 'special' },
+    { name: 'تحقيقات', slug: 'investigations' },
   ];
 
   const socialLinks = [

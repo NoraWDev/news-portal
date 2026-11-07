@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createArticle } from "@/app/admin/actions";
+import { createArticle, getAdminCategories } from "@/app/admin/actions";
 import {
   IconBold,
   IconItalic,
@@ -16,9 +16,11 @@ import {
   IconDeviceFloppy,
   IconWorld,
   IconX,
+  IconArrowRight,
 } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,155 +40,131 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const CATEGORIES = [
-  "سياسة",
-  "محلي",
-  "اقتصاد",
-  "رياضة",
-  "مجتمع",
-  "تقنية",
-];
-
-const TOOLBAR: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-}[] = [
-  { icon: IconBold, label: "عريض" },
-  { icon: IconItalic, label: "مائل" },
-  { icon: IconList, label: "قائمة نقطية" },
-  { icon: IconLink, label: "إدراج رابط" },
-  { icon: IconPhoto, label: "إدراج صورة" },
-  { icon: IconQuote, label: "اقتباس" },
-];
-
 export default function NewPostPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [category, setCategory] = useState("سياسة");
+  const [authorName, setAuthorName] = useState("هيئة التحرير");
+  const [featuredImage, setFeaturedImage] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [isFeatured, setIsFeatured] = useState<boolean>(false);
+  const [categoriesList, setCategoriesList] = useState<{ id: string; name: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function publish() {
+  useEffect(() => {
+    getAdminCategories().then((res) => {
+      if (res.success && res.data && res.data.length > 0) {
+        setCategoriesList(res.data.map((c: any) => ({ id: c.id.toString(), name: c.name })));
+        setCategoryId(res.data[0].id.toString());
+      }
+    });
+  }, []);
+
+  async function handleSave(status: 'published' | 'draft') {
     if (!title.trim()) {
       toast.error("يرجى كتابة عنوان الخبر");
+      return;
+    }
+    if (!content.trim()) {
+      toast.error("يرجى كتابة محتوى الخبر");
       return;
     }
     setIsSubmitting(true);
     const res = await createArticle({
       title: title.trim(),
-      content: content.trim() || title.trim(),
+      content: content.trim(),
       excerpt: excerpt.trim() || undefined,
-      status: "published",
+      author_name: authorName.trim() || 'هيئة التحرير',
+      category_id: categoryId || undefined,
+      featured_image: featuredImage.trim() || undefined,
+      is_featured: isFeatured,
+      status,
     });
     setIsSubmitting(false);
 
     if (res.success) {
-      toast.success("تم نشر الخبر", {
-        description: `“${title.trim()}” متاح الآن على الموقع.`,
+      toast.success(status === 'published' ? "تم نشر الخبر بنجاح" : "تم حفظ المسودة بنجاح", {
+        description: `“${title.trim()}” ${status === 'published' ? 'متاح الآن على الموقع.' : 'محفوظ في المسودات.'}`,
       });
       router.push("/admin/blog");
     } else {
-      toast.error("فشل في نشر الخبر", { description: res.error });
-    }
-  }
-
-  async function saveDraft() {
-    if (!title.trim()) {
-      toast.error("يرجى كتابة عنوان الخبر");
-      return;
-    }
-    setIsSubmitting(true);
-    const res = await createArticle({
-      title: title.trim(),
-      content: content.trim() || title.trim(),
-      excerpt: excerpt.trim() || undefined,
-      status: "draft",
-    });
-    setIsSubmitting(false);
-
-    if (res.success) {
-      toast.success("تم حفظ المسودة", {
-        description: "يمكنك العودة وإكمال تحرير الخبر ونشره لاحقًا.",
-      });
-      router.push("/admin/blog");
-    } else {
-      toast.error("فشل في حفظ المسودة", { description: res.error });
+      toast.error("حدث خطأ", { description: res.error });
     }
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="إضافة خبر جديد"
-        description="كتابة مسودة الخبر، وتحديد القسم وتفاصيل النشر في موقع أجراس اليمن الإخبارية."
-      >
+      <div className="flex items-center justify-between">
+        <PageHeader
+          title="إضافة خبر جديد"
+          description="تحرير ونشر خبر أو تقرير صحفي جديد على منصة أجراس اليمن الإخبارية."
+        />
         <Button variant="outline" asChild>
-          <Link href="/admin/blog">
-            <IconX className="size-4" /> إلغاء
+          <Link href="/admin/blog" className="flex items-center gap-1.5">
+            <IconArrowRight className="size-4" />
+            العودة للأخبار
           </Link>
         </Button>
-        <Button onClick={publish} disabled={isSubmitting}>
-          <IconWorld className="size-4" /> {isSubmitting ? "جاري النشر..." : "نشر الخبر"}
-        </Button>
-      </PageHeader>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* RIGHT — editor (in RTL) */}
+        {/* RIGHT — main editor */}
         <div className="space-y-6 lg:col-span-2">
           <Card>
+            <CardHeader>
+              <CardTitle className="text-base">تفاصيل الخبر الرئيسية</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title" className="sr-only">
-                  عنوان الخبر
-                </Label>
+                <Label htmlFor="post-title">عنوان الخبر *</Label>
                 <Input
-                  id="title"
+                  id="post-title"
+                  placeholder="أدخل عنواناً جذاباً ودقيقاً للخبر..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="عنوان الخبر الرئيسي..."
-                  className="h-auto border-0 px-0 py-1 text-2xl font-semibold tracking-tight shadow-none focus-visible:ring-0 md:text-3xl dark:bg-transparent"
+                  className="text-base font-semibold"
                 />
               </div>
 
-              <Separator />
-
-              {/* Faux rich-text toolbar */}
-              <div className="flex flex-wrap items-center gap-1">
-                {TOOLBAR.map((t) => (
-                  <Button
-                    key={t.label}
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground"
-                    onClick={() => toast(t.label, { description: "تم تطبيق التنسيق." })}
-                  >
-                    <t.icon className="size-4" />
-                    <span className="sr-only">{t.label}</span>
-                  </Button>
-                ))}
+              <div className="space-y-2">
+                <Label htmlFor="author-name">اسم الكاتب أو المصدر</Label>
+                <Input
+                  id="author-name"
+                  placeholder="مثال: هيئة التحرير، أو اسم الصحفي..."
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                />
               </div>
 
-              <Textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="ابدأ بكتابة تفاصيل الخبر والمحتوى هنا..."
-                rows={18}
-                className="resize-none border-0 px-0 text-base leading-relaxed shadow-none focus-visible:ring-0 dark:bg-transparent"
-              />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="post-content">محتوى الخبر *</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {content.trim() ? `${content.trim().split(/\s+/).length} كلمة` : "0 كلمة"}
+                  </span>
+                </div>
+                <Textarea
+                  id="post-content"
+                  placeholder="اكتب التفاصيل الكاملة للخبر هنا..."
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={14}
+                  className="leading-relaxed font-normal text-base"
+                />
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">المقتطف الصحفي</CardTitle>
+              <CardTitle className="text-base">المقتطف أو العنوان الفرعي (Excerpt)</CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
+                placeholder="ملخص قصير من سطرين يظهر في بطاقات الأخبار والصفحة الرئيسية..."
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
-                placeholder="ملخص موجز يظهر في المعاينات وشريط الأخبار ونتائج البحث..."
                 rows={3}
               />
             </CardContent>
@@ -197,85 +175,88 @@ export default function NewPostPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">إعدادات النشر</CardTitle>
+              <CardTitle className="text-base">تصنيف الخبر</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="status">الحالة</Label>
-                <Select defaultValue="مسودة">
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="مسودة">مسودة</SelectItem>
-                    <SelectItem value="منشور">منشور</SelectItem>
-                    <SelectItem value="مجدول">مجدول</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="category">القسم *</Label>
+                {categoriesList.length > 0 ? (
+                  <Select value={categoryId} onValueChange={setCategoryId}>
+                    <SelectTrigger id="category" className="w-full">
+                      <SelectValue placeholder="اختر القسم..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoriesList.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="text-xs text-muted-foreground py-2">جاري تحميل الأقسام...</div>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">القسم</Label>
-                <Select defaultValue="سياسة">
-                  <SelectTrigger id="category" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tags">الوسوم (Tags)</Label>
-                <Input
-                  id="tags"
-                  placeholder="أخبار, عاجل, تقرير"
-                />
-                <p className="text-xs text-muted-foreground">
-                  افصل بين الكلمات الدلالية بفاصلة.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="publish-date">تاريخ النشر</Label>
-                <Input id="publish-date" type="date" defaultValue="2026-10-04" />
+
+              {/* خيار تعيين كخبر رئيسي */}
+              <div className="pt-3 border-t border-border/60">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 cursor-pointer transition">
+                  <input
+                    type="checkbox"
+                    checked={isFeatured}
+                    onChange={(e) => setIsFeatured(e.target.checked)}
+                    className="mt-1 size-4 rounded border-gray-300 text-[#7a1a26] focus:ring-[#7a1a26] cursor-pointer"
+                  />
+                  <div className="flex-1 select-none">
+                    <span className="text-sm font-bold text-foreground block">تعيين كخبر رئيسي</span>
+                    <span className="text-xs text-muted-foreground block mt-0.5 leading-relaxed">
+                      عند التفعيل، سيظهر هذا الخبر في أعلى الصفحة الرئيسية كخبر رئيسي للموقع مع استبدال الخبر الرئيسي السابق.
+                    </span>
+                  </div>
+                </label>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">الصورة البارزة</CardTitle>
+              <CardTitle className="text-base">الصورة البارزة للخبر</CardTitle>
             </CardHeader>
-            <CardContent>
-              <button
-                type="button"
-                onClick={() =>
-                  toast("رفع صورة بارزة", {
-                    description: "اسحب صورة إلى هنا أو تصفح ملفاتك.",
-                  })
-                }
-                className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-muted/30 px-6 py-10 text-center transition-colors hover:bg-muted/50"
-              >
-                <span className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                  <IconCloudUpload className="size-5" />
-                </span>
-                <span className="text-sm font-medium">رفع صورة الخبر البارزة</span>
-                <span className="text-xs text-muted-foreground">
-                  صيغ PNG أو JPG أو WEBP حتى 5 ميجابايت
-                </span>
-              </button>
+            <CardContent className="space-y-4">
+              <ImageUpload
+                value={featuredImage}
+                onChange={setFeaturedImage}
+              />
+              <div className="space-y-1.5 pt-2 border-t border-border/60">
+                <Label htmlFor="image-url" className="text-xs text-muted-foreground">أو أدخل رابط صورة مباشر (URL)</Label>
+                <Input
+                  id="image-url"
+                  placeholder="https://... أو /news-government.png"
+                  value={featuredImage}
+                  onChange={(e) => setFeaturedImage(e.target.value)}
+                  className="text-xs h-8"
+                />
+              </div>
             </CardContent>
           </Card>
 
-          <div className="flex flex-col gap-2">
-            <Button onClick={publish}>
-              <IconWorld className="size-4" /> نشر الخبر
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              disabled={isSubmitting}
+              onClick={() => handleSave('published')}
+              className="w-full bg-[#7a1a26] hover:bg-[#5c131d] text-white"
+            >
+              <IconWorld className="size-4 ml-1.5" />
+              {isSubmitting ? "جاري النشر..." : "نشر الخبر الآن"}
             </Button>
-            <Button variant="outline" onClick={saveDraft}>
-              <IconDeviceFloppy className="size-4" /> حفظ كمسودة
+            <Button
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={() => handleSave('draft')}
+              className="w-full"
+            >
+              <IconDeviceFloppy className="size-4 ml-1.5" />
+              حفظ كمسودة
             </Button>
           </div>
         </div>

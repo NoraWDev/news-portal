@@ -489,7 +489,7 @@ export default function BlogPage() {
                         </Button>
 
                         <Button variant="ghost" size="icon" asChild>
-                          <Link href="/admin/blog/new">
+                          <Link href={`/admin/blog/${p.id}/edit`}>
                             <IconPencil className="size-4" />
                           </Link>
                         </Button>

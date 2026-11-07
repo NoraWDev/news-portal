@@ -28,6 +28,64 @@ function serialize<T>(data: T): T {
 }
 
 // -------------------------------------------------------------
+// 0. رفع الصور والوسائط (Media Upload) عبر خادم مؤمّن للأدمن فقط
+// -------------------------------------------------------------
+export async function uploadImageAction(formData: FormData) {
+  try {
+    const adminUser = await verifyAdminSession();
+    if (!adminUser || adminUser.email !== 'rasdnews@gmail.com') {
+      return { success: false, error: 'غير مصرح لك برفع الصور. متاح فقط لحساب الأدمن المعتمد.' };
+    }
+
+    const file = formData.get('file') as File | null;
+    if (!file) {
+      return { success: false, error: 'لم يتم تحديد أي ملف للرفع' };
+    }
+
+    // التحقق من حجم ونوع الملف
+    if (!file.type.startsWith('image/')) {
+      return { success: false, error: 'الملف المحدد ليس صورة صالحة' };
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return { success: false, error: 'حجم الصورة يتجاوز الحد المسموح به (5 ميجابايت)' };
+    }
+
+    const supabase = await createClient();
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+    const filePath = `articles/${fileName}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error: uploadError } = await supabase.storage
+      .from('news-media')
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError.message);
+      return { success: false, error: uploadError.message };
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('news-media')
+      .getPublicUrl(filePath);
+
+    return {
+      success: true,
+      url: publicUrlData.publicUrl,
+      fileName,
+    };
+  } catch (error: any) {
+    console.error('uploadImageAction error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في رفع الصورة' };
+  }
+}
+
+// -------------------------------------------------------------
 // 1. الأخبار (Articles / News)
 // -------------------------------------------------------------
 export async function getAdminArticles() {
@@ -68,6 +126,14 @@ export async function createArticle(payload: {
         .toLowerCase()
         .replace(/[\s\W-]+/g, '-') + '-' + Date.now();
 
+    // إذا تم تعيين الخبر كخبر رئيسي، نقوم بإلغاء صفة الرئيسي عن أي خبر سابق لضمان وجود خبر رئيسي واحد فقط
+    if (payload.is_featured) {
+      await prisma.articles.updateMany({
+        where: { is_featured: true },
+        data: { is_featured: false },
+      });
+    }
+
     const created = await prisma.articles.create({
       data: {
         title: payload.title,
@@ -89,6 +155,83 @@ export async function createArticle(payload: {
   } catch (error: any) {
     console.error('createArticle error:', error?.message);
     return { success: false, error: error?.message || 'فشل في إضافة الخبر' };
+  }
+}
+
+export async function getAdminArticleById(id: string) {
+  try {
+    await verifyAdminSession();
+    const article = await prisma.articles.findUnique({
+      where: { id: BigInt(id) },
+      include: {
+        category: true,
+      },
+    });
+    if (!article) return { success: false, error: 'الخبر غير موجود' };
+    return { success: true, data: serialize(article) };
+  } catch (error: any) {
+    console.error('getAdminArticleById error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في جلب تفاصيل الخبر' };
+  }
+}
+
+export async function updateArticle(
+  id: string,
+  payload: {
+    title?: string;
+    slug?: string;
+    excerpt?: string;
+    content?: string;
+    category_id?: string;
+    author_name?: string;
+    featured_image?: string;
+    status?: string;
+    is_featured?: boolean;
+  }
+) {
+  try {
+    await verifyAdminSession();
+    const dataToUpdate: any = {};
+    if (payload.title !== undefined) dataToUpdate.title = payload.title;
+    if (payload.slug !== undefined) dataToUpdate.slug = payload.slug;
+    if (payload.excerpt !== undefined) dataToUpdate.excerpt = payload.excerpt;
+    if (payload.content !== undefined) dataToUpdate.content = payload.content;
+    if (payload.author_name !== undefined) dataToUpdate.author_name = payload.author_name;
+    if (payload.featured_image !== undefined) dataToUpdate.featured_image = payload.featured_image;
+    if (payload.is_featured !== undefined) dataToUpdate.is_featured = payload.is_featured;
+    if (payload.category_id !== undefined) {
+      dataToUpdate.category_id = payload.category_id ? BigInt(payload.category_id) : null;
+    }
+    if (payload.status !== undefined) {
+      dataToUpdate.status = payload.status;
+      if (payload.status === 'published') {
+        dataToUpdate.published_at = new Date();
+      }
+    }
+
+    // إذا تم تعيين الخبر كخبر رئيسي، نلغي صفة الرئيسي عن الأخبار الأخرى باستثناء هذا الخبر
+    if (payload.is_featured) {
+      await prisma.articles.updateMany({
+        where: {
+          is_featured: true,
+          id: { not: BigInt(id) },
+        },
+        data: { is_featured: false },
+      });
+    }
+
+    const updated = await prisma.articles.update({
+      where: { id: BigInt(id) },
+      data: dataToUpdate,
+    });
+
+    revalidatePath('/admin/blog');
+    revalidatePath('/');
+    revalidatePath(`/article/${updated.slug}`);
+    return { success: true, data: serialize(updated) };
+  } catch (error: any) {
+    console.error('updateArticle error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في تحديث الخبر' };
   }
 }
 

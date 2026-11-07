@@ -125,12 +125,13 @@ export default async function Home() {
               md:h-[440px]
               overflow-hidden
               rounded-xl
-              bg-[#031321]
+              bg-[#020912]
               shadow-[0_6px_25px_rgba(0,0,0,0.16)]
               block
               group
             "
           >
+            {/* الصورة تملأ وتمتد على كامل أبعاد الحاوية تلقائياً 100% */}
             <img
               src={featuredArticle.featured_image || "/yemen-bg.jpg"}
               alt={featuredArticle.title}
@@ -139,17 +140,16 @@ export default async function Home() {
                 inset-0
                 w-full
                 h-full
-                object-cover
-                object-center
-                brightness-125
-                contrast-[1.05]
+                object-fill
                 transition-transform
                 duration-500
                 group-hover:scale-105
               "
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#020b14] via-[#020b14]/80 via-55% to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#020b14]/20 to-transparent" />
+
+            {/* تدرج القراءة لضمان وضوح العنوان والبيانات فوق أي صورة */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020b14] via-[#020b14]/75 via-45% to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#020b14]/40 to-transparent pointer-events-none" />
             
             <div className="absolute inset-0 flex flex-col justify-end px-3.5 pb-3 sm:px-6 sm:pb-4 lg:px-7 lg:pb-4">
               {featuredArticle.category && (
