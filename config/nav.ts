@@ -10,6 +10,8 @@ import {
   IconChartBar,
   IconSettings,
   IconSparkles,
+  IconPencil,
+  IconUserCircle,
   type Icon,
 } from "@tabler/icons-react";
 
@@ -52,6 +54,27 @@ export const navGroups: NavGroup[] = [
       { title: "المستخدمون", url: "/admin/team", icon: IconUsers },
       { title: "الإحصائيات", url: "/admin/reports", icon: IconChartBar },
       { title: "الإعدادات", url: "/admin/settings", icon: IconSettings },
+    ],
+  },
+  {
+    label: "مقالات الرأي والكتّاب",
+    items: [
+      {
+        title: "الكتّاب",
+        icon: IconUserCircle,
+        items: [
+          { title: "قائمة الكتّاب", url: "/admin/authors" },
+          { title: "إضافة كاتب", url: "/admin/authors/new" },
+        ],
+      },
+      {
+        title: "المقالات",
+        icon: IconPencil,
+        items: [
+          { title: "قائمة المقالات", url: "/admin/opinions" },
+          { title: "إضافة مقال", url: "/admin/opinions/new" },
+        ],
+      },
     ],
   },
 ];

@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
+import ShareButtons from './ShareButtons';
+import CommentsSection from './CommentsSection';
+import { getApprovedComments } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,26 +17,49 @@ async function getArticle(slug: string) {
     },
     include: {
       category: true,
+      author: true,
     },
   });
 }
 
 async function getRelatedArticles(categoryId: bigint | null, currentArticleId: bigint) {
-  if (!categoryId) return [];
-  return prisma.articles.findMany({
-    where: {
-      category_id: categoryId,
-      id: { not: currentArticleId },
-      status: 'published',
-    },
-    take: 3,
-    orderBy: {
-      published_at: 'desc',
-    },
-    include: {
-      category: true,
-    },
-  });
+  let related: any[] = [];
+  try {
+    if (categoryId) {
+      related = await prisma.articles.findMany({
+        where: {
+          category_id: categoryId,
+          id: { not: currentArticleId },
+          status: 'published',
+        },
+        take: 4,
+        orderBy: [{ published_at: 'desc' }, { created_at: 'desc' }],
+        include: {
+          category: true,
+        },
+      });
+    }
+
+    if (related.length < 4) {
+      const excludeIds = [currentArticleId, ...related.map((r) => r.id)];
+      const fallback = await prisma.articles.findMany({
+        where: {
+          id: { notIn: excludeIds },
+          status: 'published',
+        },
+        take: 4 - related.length,
+        orderBy: [{ published_at: 'desc' }, { created_at: 'desc' }],
+        include: {
+          category: true,
+        },
+      });
+      related = [...related, ...fallback];
+    }
+  } catch (err) {
+    console.error('[ArticlePage] Failed to fetch related articles:', err);
+  }
+
+  return related;
 }
 
 export async function generateMetadata({
@@ -84,6 +110,11 @@ export default async function ArticlePage({
   }
 
   const related = await getRelatedArticles(article.category_id, article.id);
+  const approvedComments = await getApprovedComments(article.id);
+
+  // رابط الخبر الكامل للمشاركة
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ajrasalyemen.news';
+  const articleUrl = `${siteUrl}/article/${article.slug}`;
 
   return (
     <div className="min-h-screen bg-[#f5f7fa] overflow-x-hidden" dir="rtl">
@@ -124,9 +155,33 @@ export default async function ArticlePage({
 
           {/* تفاصيل الكاتب والتاريخ والمشاهدات */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 pb-4 mb-6 border-b border-gray-100 text-xs text-gray-500">
-            <span className="font-semibold text-gray-700">
-              بقلم: {article.author_name || 'هيئة التحرير'}
-            </span>
+            {/* بيانات الكاتب */}
+            {article.author ? (
+              <Link
+                href={`/author/${article.author.slug}`}
+                className="flex items-center gap-2 group"
+              >
+                {article.author.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={article.author.avatar_url}
+                    alt={article.author.name}
+                    className="size-8 rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <div className="size-8 rounded-full bg-[#f1e7e9] flex items-center justify-center text-[#7a1a26] font-black text-sm">
+                    {article.author.name.charAt(0)}
+                  </div>
+                )}
+                <span className="font-semibold text-gray-700 group-hover:text-[#7a1a26] transition">
+                  {article.author.name}
+                </span>
+              </Link>
+            ) : (
+              <span className="font-semibold text-gray-700">
+                بقلم: {article.author_name || 'هيئة التحرير'}
+              </span>
+            )}
             <span>•</span>
             <span>
               {new Date(article.published_at || article.created_at).toLocaleDateString('ar-YE', {
@@ -162,6 +217,54 @@ export default async function ArticlePage({
           <div className="text-gray-800 text-base sm:text-lg leading-loose space-y-4 whitespace-pre-line font-normal">
             {article.content}
           </div>
+
+          {/* بطاقة الكاتب أسفل المقال */}
+          {article.author && (
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <Link
+                href={`/author/${article.author.slug}`}
+                className="flex items-center gap-4 p-4 rounded-xl bg-[#f8fafc] border border-[#dbe3ea] hover:border-[#7a1a26] hover:shadow-sm transition group"
+              >
+                {article.author.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={article.author.avatar_url}
+                    alt={article.author.name}
+                    className="size-16 rounded-full object-cover border-2 border-[#7a1a26] shrink-0"
+                  />
+                ) : (
+                  <div className="size-16 rounded-full bg-[#f1e7e9] border-2 border-[#7a1a26] flex items-center justify-center shrink-0">
+                    <span className="text-[#7a1a26] text-2xl font-black">
+                      {article.author.name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-400 mb-0.5">عن الكاتب</p>
+                  <p className="font-bold text-[#08243d] group-hover:text-[#7a1a26] transition text-sm sm:text-base">
+                    {article.author.name}
+                  </p>
+                  {article.author.bio && (
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-5">
+                      {article.author.bio}
+                    </p>
+                  )}
+                </div>
+                <span className="text-[#7a1a26] text-xs font-semibold shrink-0 group-hover:underline">
+                  جميع المقالات ←
+                </span>
+              </Link>
+            </div>
+          )}
+
+          {/* أزرار المشاركة */}
+          <ShareButtons title={article.title} url={articleUrl} />
+
+          {/* قسم التعليقات */}
+          <CommentsSection
+            articleId={article.id.toString()}
+            initialComments={approvedComments}
+          />
         </article>
 
         {/* أخبار ذات صلة */}
@@ -171,28 +274,33 @@ export default async function ArticlePage({
               <span className="w-1.5 h-5 bg-[#7a1a26] rounded-full inline-block" />
               أخبار ذات صلة
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {related.map((rel) => (
                 <Link
                   key={rel.id.toString()}
                   href={`/article/${rel.slug}`}
                   className="bg-white rounded-xl border border-[#dbe3ea] overflow-hidden hover:shadow-md transition group flex flex-col"
                 >
-                  {rel.featured_image && (
-                    <div className="aspect-[16/10] overflow-hidden bg-gray-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={rel.featured_image}
-                        alt={rel.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                      />
+                  <div className="aspect-[16/10] overflow-hidden bg-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={rel.featured_image || '/news-government.png'}
+                      alt={rel.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    />
+                  </div>
+                  <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      {rel.category && (
+                        <span className="inline-block bg-[#7a1a26]/10 text-[#7a1a26] text-[9px] font-bold px-1.5 py-0.5 rounded mb-1">
+                          {rel.category.name}
+                        </span>
+                      )}
+                      <h3 className="text-xs sm:text-sm font-bold text-[#08243d] group-hover:text-[#7a1a26] transition line-clamp-2 leading-snug sm:leading-5">
+                        {rel.title}
+                      </h3>
                     </div>
-                  )}
-                  <div className="p-3.5 flex-1 flex flex-col justify-between">
-                    <h3 className="text-sm font-bold text-[#08243d] group-hover:text-[#7a1a26] transition line-clamp-2 leading-6">
-                      {rel.title}
-                    </h3>
-                    <div className="mt-2 text-[10px] text-gray-400">
+                    <div className="mt-2 text-[9px] sm:text-[10px] text-gray-400">
                       {new Date(rel.published_at || rel.created_at).toLocaleDateString('ar-YE')}
                     </div>
                   </div>

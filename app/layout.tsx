@@ -6,6 +6,8 @@ const cairo = Cairo({
   variable: "--font-cairo",
   subsets: ["arabic"],
   weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  fallback: ["Cairo", "Tahoma", "sans-serif"],
 });
 
 export const viewport: Viewport = {
@@ -33,7 +35,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${cairo.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className={`${cairo.className} min-h-full flex flex-col`}>{children}</body>
     </html>
   );
 }

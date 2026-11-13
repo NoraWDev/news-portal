@@ -40,7 +40,7 @@ export async function getLatestArticles(limit = 4) {
   });
 }
 
-export async function getMostReadArticles(limit = 4) {
+export async function getMostReadArticles(limit = 5) {
   return prisma.articles.findMany({
     where: {
       status: 'published'
@@ -48,9 +48,10 @@ export async function getMostReadArticles(limit = 4) {
     include: {
       category: true,
     },
-    orderBy: {
-      views_count: 'desc',
-    },
+    orderBy: [
+      { views_count: 'desc' },
+      { published_at: 'desc' },
+    ],
     take: limit,
   });
 }

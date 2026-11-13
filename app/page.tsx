@@ -2,23 +2,36 @@ import Header from '@/components/Header';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { getFeaturedArticle, getLatestArticles, getMostReadArticles, getFeaturedVideo, getLatestVideos, type ArticleWithCategory, type VideoWithCategory } from '@/lib/data/home';
+import { getBreakingNews, type BreakingNewsItem } from '@/app/actions/breaking-news';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const [featuredArticle, latestArticles, mostReadArticles, featuredVideo, latestVideos] = await Promise.all([
-    getFeaturedArticle(),
-    getLatestArticles(4),
-    getMostReadArticles(4),
-    getFeaturedVideo(),
-    getLatestVideos(3),
-  ]);
+  let featuredArticle: ArticleWithCategory | null = null;
+  let latestArticles: ArticleWithCategory[] = [];
+  let mostReadArticles: ArticleWithCategory[] = [];
+  let featuredVideo: VideoWithCategory | null = null;
+  let latestVideos: VideoWithCategory[] = [];
+  let breakingNews: BreakingNewsItem[] = [];
+
+  try {
+    [featuredArticle, latestArticles, mostReadArticles, featuredVideo, latestVideos, breakingNews] = await Promise.all([
+      getFeaturedArticle(),
+      getLatestArticles(4),
+      getMostReadArticles(5),
+      getFeaturedVideo(),
+      getLatestVideos(3),
+      getBreakingNews(),
+    ]);
+  } catch (err) {
+    console.error('[HomePage] DB Error:', err);
+  }
 
   const ads = [1, 2, 3];
 
   return (
     <div className="min-h-screen bg-[#f5f7fa] overflow-x-hidden">
-      <Header />
+      <Header initialBreakingNews={breakingNews} />
 
       {/* ================= القسم الرئيسي ================= */}
       <section
@@ -28,15 +41,16 @@ export default async function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-[3.2fr_1fr] gap-3 sm:gap-4 items-start">
           
           {/* ================= الإعلانات - مساحات عرض فقط وليست أزراراً ================= */}
-          <aside className="order-2 lg:order-2 flex flex-col gap-3">
+          <aside className="order-2 lg:order-2 grid grid-cols-3 lg:flex lg:flex-col gap-2 sm:gap-3">
             {ads.map((ad) => (
               <div
                 key={ad}
                 className="
                   relative
-                  h-[95px]
-                  sm:h-[115px]
-                  md:h-[125px]
+                  h-[75px]
+                  xs:h-[85px]
+                  sm:h-[105px]
+                  md:h-[115px]
                   lg:h-[92px]
                   xl:h-[101px]
                   overflow-hidden
@@ -86,25 +100,26 @@ export default async function Home() {
                     to-transparent
                   "
                 />
-                <div className="relative z-10 h-full flex flex-col items-center justify-center p-2 text-center pointer-events-none select-none">
+                <div className="relative z-10 h-full flex flex-col items-center justify-center p-1 sm:p-2 text-center pointer-events-none select-none">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/agras-bg.png"
                     alt="أجراس اليمن الإخبارية"
                     className="
-                      w-[46px]
-                      sm:w-[56px]
-                      md:w-[66px]
+                      w-[32px]
+                      xs:w-[40px]
+                      sm:w-[54px]
+                      md:w-[64px]
                       h-auto
                       object-contain
                       drop-shadow-md
                       opacity-85
                     "
                   />
-                  <div className="text-white text-[10px] sm:text-[11px] md:text-xs font-bold mt-1">
+                  <div className="text-white text-[9px] xs:text-[10px] sm:text-[11px] md:text-xs font-bold mt-0.5 sm:mt-1 line-clamp-1">
                     مساحتك الإعلانية هنا
                   </div>
-                  <div className="text-gray-400 text-[9px] font-medium mt-0.5">
+                  <div className="hidden xs:block text-gray-400 text-[8px] sm:text-[9px] font-medium mt-0.5">
                     مساحة إعلانية مخصصة
                   </div>
                 </div>
@@ -122,9 +137,10 @@ export default async function Home() {
               relative
               lg:h-[calc(3*(92px)+24px)]
               xl:h-[calc(3*(101px)+24px)]
-              h-[320px]
-              sm:h-[380px]
-              md:h-[440px]
+              h-[260px]
+              xs:h-[290px]
+              sm:h-[360px]
+              md:h-[420px]
               overflow-hidden
               rounded-xl
               bg-[#020912]
@@ -220,15 +236,15 @@ export default async function Home() {
 
               <div className="px-3 sm:px-4 md:px-5">
                 {latestArticles.length > 0 ? latestArticles.map((article: ArticleWithCategory) => (
-                  <article key={article.id.toString()} className="flex flex-row items-start gap-3 sm:gap-4 md:gap-5 py-3.5 sm:py-4 border-b border-gray-200 last:border-b-0">
+                  <article key={article.id.toString()} className="flex flex-row items-start gap-2.5 sm:gap-4 md:gap-5 py-2.5 sm:py-3.5 border-b border-gray-200 last:border-b-0">
                     <img
                       src={article.featured_image || "/news-government.png"}
                       alt={article.title}
-                      className="w-24 h-20 sm:w-32 sm:h-24 md:w-36 md:h-28 object-cover rounded-lg shrink-0"
+                      className="w-20 h-16 sm:w-28 sm:h-22 md:w-36 md:h-28 object-cover rounded-lg shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       {article.category && (
-                        <span className="inline-block bg-[#7a1a26] text-white px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[9px] sm:text-[10px] md:text-xs font-black mb-1 sm:mb-1.5">
+                        <span className="inline-block bg-[#7a1a26] text-white px-1.5 sm:px-2.5 py-0.5 rounded text-[9px] sm:text-[10px] md:text-xs font-black mb-1 sm:mb-1.5">
                           {article.category.name}
                         </span>
                       )}
@@ -238,11 +254,11 @@ export default async function Home() {
                         </h3>
                       </Link>
                       {article.excerpt && (
-                        <p className="hidden sm:block text-gray-400 text-xs md:text-sm leading-6 mt-1 line-clamp-2">
+                        <p className="hidden md:block text-gray-400 text-xs md:text-sm leading-6 mt-1 line-clamp-2">
                           {article.excerpt}
                         </p>
                       )}
-                      <div className="flex items-center gap-2 sm:gap-3 mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] md:text-xs text-gray-400">
+                      <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-2 text-[9px] sm:text-[10px] md:text-xs text-gray-400">
                         <span>{new Date(article.published_at || article.created_at).toLocaleDateString('ar-YE')}</span>
                         <span>•</span>
                         <span>{article.views_count.toString()} مشاهدة</span>
@@ -250,7 +266,7 @@ export default async function Home() {
                     </div>
                   </article>
                 )) : (
-                  <div className="min-h-[250px] sm:min-h-[380px] md:min-h-[420px] flex items-center justify-center text-center text-gray-400 font-semibold text-sm">
+                  <div className="min-h-[200px] sm:min-h-[300px] flex items-center justify-center text-center text-gray-400 font-semibold text-sm">
                     لا توجد أخبار حديثة حالياً
                   </div>
                 )}
@@ -259,53 +275,47 @@ export default async function Home() {
 
             {/* ================= قسم الأكثر قراءة (يظهر في الجوال فقط هنا لمنع التكرار) ================= */}
             <div className="lg:hidden bg-white rounded-xl border border-[#dbe3ea] shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                <h2 className="flex items-center gap-2 text-[#08243d] text-base sm:text-lg font-black">
-                  <span className="text-[#7a1a26] text-lg sm:text-xl">♨</span>
+              <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-gray-200">
+                <h2 className="flex items-center gap-2 text-[#08243d] text-sm sm:text-base font-black">
+                  <span className="text-[#7a1a26] text-base sm:text-lg">♨</span>
                   الأكثر قراءة
                 </h2>
               </div>
-              <div className="px-3">
-                <article className="flex items-center gap-3 py-3 border-b border-gray-100">
-                  <span className="text-[#7a1a26] font-black text-base sm:text-lg w-5 shrink-0 text-center">1</span>
-                  <img src="/news-economy.png" alt="أسعار الصرف" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">تراجع أسعار الصرف في عدن والمحافظات</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 12 ساعة</span>
+              <div className="px-3 divide-y divide-gray-100">
+                {mostReadArticles.length > 0 ? (
+                  mostReadArticles.map((article, idx) => (
+                    <Link
+                      key={article.id.toString()}
+                      href={`/article/${article.slug}`}
+                      className="flex items-center gap-2.5 py-2 group hover:bg-gray-50/80 transition rounded-lg"
+                    >
+                      <span className="text-[#7a1a26] font-black text-sm sm:text-base w-4 shrink-0 text-center">
+                        {idx + 1}
+                      </span>
+                      <img
+                        src={article.featured_image || '/news-government.png'}
+                        alt={article.title}
+                        className="w-12 h-12 rounded-md object-cover shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2 group-hover:text-[#7a1a26] transition">
+                          {article.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-gray-400 text-[10px] mt-0.5">
+                          <span>
+                            {new Date(article.published_at || article.created_at).toLocaleDateString('ar-YE')}
+                          </span>
+                          <span>•</span>
+                          <span>{article.views_count.toString()} مشاهدة</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="py-6 text-center text-xs text-gray-400 font-semibold">
+                    لا توجد أخبار كافية لعرض الأكثر قراءة
                   </div>
-                </article>
-                <article className="flex items-center gap-3 py-3 border-b border-gray-100">
-                  <span className="text-[#7a1a26] font-black text-base sm:text-lg w-5 shrink-0 text-center">2</span>
-                  <img src="/news-government.png" alt="الحكومة اليمنية" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">الحكومة اليمنية تؤكد استمرار جهودها</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 9 ساعات</span>
-                  </div>
-                </article>
-                <article className="flex items-center gap-3 py-3 border-b border-gray-100">
-                  <span className="text-[#7a1a26] font-black text-base sm:text-lg w-5 shrink-0 text-center">3</span>
-                  <img src="/news-military.png" alt="خبر عسكري" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">الجيش اليمني يعلن تنفيذ عملية نوعية</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 7 ساعات</span>
-                  </div>
-                </article>
-                <article className="flex items-center gap-3 py-3 border-b border-gray-100">
-                  <span className="text-[#7a1a26] font-black text-base sm:text-lg w-5 shrink-0 text-center">4</span>
-                  <img src="/news-port.png" alt="ميناء عدن" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">اتفاقية جديدة لدعم قطاع الموانئ في اليمن</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 5 ساعات</span>
-                  </div>
-                </article>
-                <article className="flex items-center gap-3 py-3">
-                  <span className="text-[#7a1a26] font-black text-base sm:text-lg w-5 shrink-0 text-center">5</span>
-                  <img src="/news-government.png" alt="تطورات في المحافظات" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">تطورات جديدة في المحافظات اليمنية</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 4 ساعات</span>
-                  </div>
-                </article>
+                )}
               </div>
             </div>
 
@@ -389,7 +399,7 @@ export default async function Home() {
                 )}
 
                 {/* الفيديوهات الجانبية */}
-                <div className="flex flex-col gap-2.5 sm:gap-3 justify-between">
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2.5 sm:gap-3 justify-between">
                   {latestVideos.length > 0 ? latestVideos.map((video: VideoWithCategory) => (
                     <Link key={video.id.toString()} href={`/video/${video.id}`} className="block group">
                       <article className="flex flex-row gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl border border-white/20 bg-[#0f1014]/90 hover:border-[#5c131d] transition duration-300 items-center">
@@ -441,89 +451,89 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* ================= قسم أعلن معنا (للجوال والتابلت) ================= */}
-            <div className="lg:hidden">
-              <section className="relative overflow-hidden rounded-xl bg-[#08090b] border border-[#5c131d]/50 shadow-sm p-4 text-right">
+            {/* ================= قسم أعلن معنا والنشرة الإخبارية (للجوال والتابلت: مدمج ومنظم) ================= */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:hidden gap-3">
+              {/* أعلن معنا */}
+              <section className="relative overflow-hidden rounded-xl bg-[#08090b] border border-[#5c131d]/50 shadow-sm p-3.5 sm:p-4 text-right flex flex-col justify-between">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#0e0f13] via-[#08090b] to-[#020304]" />
                 <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-[#7a1a26]/15 blur-2xl pointer-events-none" />
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5 mb-2.5">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h2 className="text-white text-base sm:text-lg font-black">أعلن معنا</h2>
-                        <span className="text-[#7a1a26] text-lg font-black">+</span>
+                <div className="relative z-10 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2 mb-2">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h2 className="text-white text-sm sm:text-base font-black">أعلن معنا</h2>
+                          <span className="text-[#7a1a26] text-base font-black">+</span>
+                        </div>
+                        <p className="text-gray-300 text-[10px] sm:text-[11px] font-semibold mt-0.5">وصل إعلانك إلى جمهور واسع</p>
                       </div>
-                      <p className="text-gray-300 text-[11px] font-semibold mt-0.5">وصل إعلانك إلى جمهور واسع في اليمن والعالم</p>
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-black/60 border border-neutral-700/60 flex items-center justify-center shrink-0">
+                        <span className="text-white text-base sm:text-xl">📣</span>
+                      </div>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-black/60 border border-neutral-700/60 flex items-center justify-center shrink-0">
-                      <span className="text-white text-xl">📣</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center py-1">
-                    <div className="bg-[#121318] p-1.5 rounded-lg border border-white/5">
-                      <div className="text-[#d4737f] text-sm mb-0.5">✦</div>
-                      <span className="text-white text-[10px] font-bold block">مواقع إخبارية</span>
-                    </div>
-                    <div className="bg-[#121318] p-1.5 rounded-lg border border-white/5">
-                      <div className="text-[#d4737f] text-sm mb-0.5">◉</div>
-                      <span className="text-white text-[10px] font-bold block">جمهور مستهدف</span>
-                    </div>
-                    <div className="bg-[#121318] p-1.5 rounded-lg border border-white/5">
-                      <div className="text-[#d4737f] text-sm mb-0.5">✥</div>
-                      <span className="text-white text-[10px] font-bold block">أعلى مصداقية</span>
+                    <div className="grid grid-cols-3 gap-1.5 text-center py-1">
+                      <div className="bg-[#121318] p-1 rounded-lg border border-white/5">
+                        <div className="text-[#d4737f] text-xs mb-0.5">✦</div>
+                        <span className="text-white text-[9px] font-bold block">مواقع إخبارية</span>
+                      </div>
+                      <div className="bg-[#121318] p-1 rounded-lg border border-white/5">
+                        <div className="text-[#d4737f] text-xs mb-0.5">◉</div>
+                        <span className="text-white text-[9px] font-bold block">جمهور مستهدف</span>
+                      </div>
+                      <div className="bg-[#121318] p-1 rounded-lg border border-white/5">
+                        <div className="text-[#d4737f] text-xs mb-0.5">✥</div>
+                        <span className="text-white text-[9px] font-bold block">أعلى مصداقية</span>
+                      </div>
                     </div>
                   </div>
                   <Link
                     href="/advertise"
-                    className="mt-3 w-full flex items-center justify-center gap-2 bg-[#7a1a26] hover:bg-[#5c131d] active:scale-[0.98] text-white py-2 rounded-lg text-xs font-black shadow-md transition"
+                    className="mt-2.5 w-full flex items-center justify-center gap-2 bg-[#7a1a26] hover:bg-[#5c131d] active:scale-[0.98] text-white py-1.5 sm:py-2 rounded-lg text-xs font-black shadow-md transition"
                   >
-                    ابدأ الآن
-                    <span>←</span>
+                    ابدأ الآن ←
                   </Link>
                 </div>
               </section>
-            </div>
 
-            {/* ================= قسم اشترك في نشرتنا الإخبارية (للجوال والتابلت: مرتب ومدمج) ================= */}
-            <div className="lg:hidden">
-              <section className="relative overflow-hidden rounded-xl bg-[#08090b] border border-[#5c131d]/40 shadow-sm p-4 text-right">
+              {/* اشترك في نشرتنا الإخبارية */}
+              <section className="relative overflow-hidden rounded-xl bg-[#08090b] border border-[#5c131d]/40 shadow-sm p-3.5 sm:p-4 text-right flex flex-col justify-between">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#0e0f13] via-[#08090b] to-[#020304]" />
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white text-xl">✉</span>
-                      <h2 className="text-white text-base sm:text-lg font-black">اشترك في نشرتنا الإخبارية</h2>
+                <div className="relative z-10 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-white text-base sm:text-lg">✉</span>
+                      <h2 className="text-white text-sm sm:text-base font-black">اشترك في نشرتنا الإخبارية</h2>
+                    </div>
+                    <p className="text-gray-300 text-[10px] sm:text-[11px] leading-4 mb-2">
+                      كن أول من يصله آخر الأخبار والتحديثات من منصة أجراس اليمن
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      <input
+                        type="email"
+                        placeholder="أدخل بريدك الإلكتروني"
+                        dir="rtl"
+                        className="w-full bg-[#020304] border border-neutral-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#7a1a26]"
+                      />
+                      <button
+                        type="button"
+                        className="w-full cursor-pointer bg-[#7a1a26] hover:bg-[#5c131d] text-white rounded-lg py-1.5 text-xs font-black transition shadow-sm"
+                      >
+                        اشترك الآن
+                      </button>
                     </div>
                   </div>
-                  <p className="text-gray-300 text-[11px] leading-5 mb-2.5">
-                    كن أول من يصله آخر الأخبار والتحديثات من منصة أجراس اليمن الإخبارية
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <input
-                      type="email"
-                      placeholder="أدخل بريدك الإلكتروني"
-                      dir="rtl"
-                      className="w-full bg-[#020304] border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#7a1a26]"
-                    />
-                    <button
-                      type="button"
-                      className="w-full cursor-pointer bg-[#7a1a26] hover:bg-[#5c131d] text-white rounded-lg py-2 text-xs font-black transition shadow-sm"
-                    >
-                      اشترك الآن
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-3 border-t border-white/10 mt-3 pt-2 text-center">
+                  <div className="grid grid-cols-3 border-t border-white/10 mt-2.5 pt-1.5 text-center">
                     <div>
-                      <div className="text-[#7a1a26] text-sm">★</div>
-                      <span className="text-gray-300 text-[9px] font-bold">محتوى مميز</span>
+                      <div className="text-[#7a1a26] text-xs">★</div>
+                      <span className="text-gray-300 text-[8px] sm:text-[9px] font-bold">محتوى مميز</span>
                     </div>
                     <div className="border-x border-white/10">
-                      <div className="text-[#7a1a26] text-sm">▣</div>
-                      <span className="text-gray-300 text-[9px] font-bold">تقارير حصرية</span>
+                      <div className="text-[#7a1a26] text-xs">▣</div>
+                      <span className="text-gray-300 text-[8px] sm:text-[9px] font-bold">تقارير حصرية</span>
                     </div>
                     <div>
-                      <div className="text-[#7a1a26] text-sm">ϟ</div>
-                      <span className="text-gray-300 text-[9px] font-bold">أخبار عاجلة</span>
+                      <div className="text-[#7a1a26] text-xs">ϟ</div>
+                      <span className="text-gray-300 text-[8px] sm:text-[9px] font-bold">أخبار عاجلة</span>
                     </div>
                   </div>
                 </div>
@@ -665,47 +675,41 @@ export default async function Home() {
                   الأكثر قراءة
                 </h2>
               </div>
-              <div className="px-3">
-                <article className="flex items-center gap-3 py-3 border-b border-gray-100">
-                  <span className="text-[#7a1a26] font-black text-lg w-5">1</span>
-                  <img src="/news-economy.png" alt="أسعار الصرف" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">تراجع أسعار الصرف في عدن والمحافظات</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 12 ساعة</span>
+              <div className="px-3 divide-y divide-gray-100">
+                {mostReadArticles.length > 0 ? (
+                  mostReadArticles.map((article, idx) => (
+                    <Link
+                      key={article.id.toString()}
+                      href={`/article/${article.slug}`}
+                      className="flex items-center gap-3 py-3 group hover:bg-gray-50/80 transition rounded-lg"
+                    >
+                      <span className="text-[#7a1a26] font-black text-lg w-5 text-center shrink-0">
+                        {idx + 1}
+                      </span>
+                      <img
+                        src={article.featured_image || '/news-government.png'}
+                        alt={article.title}
+                        className="w-14 h-14 rounded-md object-cover shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2 group-hover:text-[#7a1a26] transition">
+                          {article.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-gray-400 text-[10px] mt-1">
+                          <span>
+                            {new Date(article.published_at || article.created_at).toLocaleDateString('ar-YE')}
+                          </span>
+                          <span>•</span>
+                          <span>{article.views_count.toString()} مشاهدة</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-xs text-gray-400 font-semibold">
+                    لا توجد أخبار كافية لعرض الأكثر قراءة
                   </div>
-                </article>
-                <article className="flex items-center gap-3 py-3 border-b border-gray-100">
-                  <span className="text-[#7a1a26] font-black text-lg w-5">2</span>
-                  <img src="/news-government.png" alt="الحكومة اليمنية" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">الحكومة اليمنية تؤكد استمرار جهودها</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 9 ساعات</span>
-                  </div>
-                </article>
-                <article className="flex items-center gap-3 py-3 border-b border-gray-100">
-                  <span className="text-[#7a1a26] font-black text-lg w-5">3</span>
-                  <img src="/news-military.png" alt="خبر عسكري" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">الجيش اليمني يعلن تنفيذ عملية نوعية</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 7 ساعات</span>
-                  </div>
-                </article>
-                <article className="flex items-center gap-3 py-3 border-b border-gray-100">
-                  <span className="text-[#7a1a26] font-black text-lg w-5">4</span>
-                  <img src="/news-port.png" alt="ميناء عدن" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">اتفاقية جديدة لدعم قطاع الموانئ في اليمن</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 5 ساعات</span>
-                  </div>
-                </article>
-                <article className="flex items-center gap-3 py-3">
-                  <span className="text-[#7a1a26] font-black text-lg w-5">5</span>
-                  <img src="/news-government.png" alt="تطورات في المحافظات" className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#08243d] text-xs font-bold leading-5 line-clamp-2">تطورات جديدة في المحافظات اليمنية</h3>
-                    <span className="text-gray-400 text-[10px]">منذ 4 ساعات</span>
-                  </div>
-                </article>
+                )}
               </div>
             </section>
 

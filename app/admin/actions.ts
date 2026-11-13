@@ -116,6 +116,7 @@ export async function createArticle(payload: {
   featured_image?: string;
   status?: string;
   is_featured?: boolean;
+  is_breaking?: boolean;
 }) {
   try {
     await verifyAdminSession();
@@ -145,6 +146,7 @@ export async function createArticle(payload: {
         featured_image: payload.featured_image,
         status: payload.status || 'published',
         is_featured: !!payload.is_featured,
+        is_breaking: !!payload.is_breaking,
         published_at: payload.status === 'draft' ? null : new Date(),
       },
     });
@@ -187,6 +189,7 @@ export async function updateArticle(
     featured_image?: string;
     status?: string;
     is_featured?: boolean;
+    is_breaking?: boolean;
   }
 ) {
   try {
@@ -199,6 +202,7 @@ export async function updateArticle(
     if (payload.author_name !== undefined) dataToUpdate.author_name = payload.author_name;
     if (payload.featured_image !== undefined) dataToUpdate.featured_image = payload.featured_image;
     if (payload.is_featured !== undefined) dataToUpdate.is_featured = payload.is_featured;
+    if (payload.is_breaking !== undefined) dataToUpdate.is_breaking = payload.is_breaking;
     if (payload.category_id !== undefined) {
       dataToUpdate.category_id = payload.category_id ? BigInt(payload.category_id) : null;
     }
@@ -232,6 +236,22 @@ export async function updateArticle(
   } catch (error: any) {
     console.error('updateArticle error:', error?.message);
     return { success: false, error: error?.message || 'فشل في تحديث الخبر' };
+  }
+}
+
+export async function toggleBreakingArticle(id: string, is_breaking: boolean) {
+  try {
+    await verifyAdminSession();
+    const updated = await prisma.articles.update({
+      where: { id: BigInt(id) },
+      data: { is_breaking },
+    });
+    revalidatePath('/admin/blog');
+    revalidatePath('/');
+    return { success: true, data: serialize(updated) };
+  } catch (error: any) {
+    console.error('toggleBreakingArticle error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في تغيير حالة الخبر العاجل' };
   }
 }
 
@@ -628,7 +648,235 @@ export async function deleteAd(id: string) {
 }
 
 // -------------------------------------------------------------
-// 6. نظرة عامة (Overview Stats)
+// 6. الكتّاب (Authors)
+// -------------------------------------------------------------
+export async function getAdminAuthors() {
+  try {
+    await verifyAdminSession();
+    const list = await prisma.authors.findMany({
+      include: {
+        _count: { select: { articles: true } },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+    return { success: true, data: serialize(list) };
+  } catch (error: any) {
+    console.error('getAdminAuthors error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في جلب الكتّاب', data: [] };
+  }
+}
+
+export async function getAuthorBySlug(slug: string) {
+  try {
+    const author = await prisma.authors.findUnique({
+      where: { slug },
+      include: {
+        articles: {
+          where: { status: 'published' },
+          orderBy: { published_at: 'desc' },
+          include: { category: true },
+        },
+      },
+    });
+    if (!author) return { success: false, error: 'الكاتب غير موجود' };
+    return { success: true, data: serialize(author) };
+  } catch (error: any) {
+    console.error('getAuthorBySlug error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في جلب بيانات الكاتب' };
+  }
+}
+
+export async function getAdminAuthorById(id: string) {
+  try {
+    await verifyAdminSession();
+    const author = await prisma.authors.findUnique({ where: { id: BigInt(id) } });
+    if (!author) return { success: false, error: 'الكاتب غير موجود' };
+    return { success: true, data: serialize(author) };
+  } catch (error: any) {
+    console.error('getAdminAuthorById error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في جلب بيانات الكاتب' };
+  }
+}
+
+export async function createAuthor(payload: {
+  name: string;
+  slug?: string;
+  bio?: string;
+  avatar_url?: string;
+}) {
+  try {
+    await verifyAdminSession();
+    const slug =
+      payload.slug?.trim() ||
+      payload.name
+        .trim()
+        .toLowerCase()
+        .replace(/[\s\W-]+/g, '-') + '-' + Date.now();
+
+    const created = await prisma.authors.create({
+      data: {
+        name: payload.name.trim(),
+        slug,
+        bio: payload.bio?.trim() || null,
+        avatar_url: payload.avatar_url?.trim() || null,
+      },
+    });
+    revalidatePath('/admin/authors');
+    return { success: true, data: serialize(created) };
+  } catch (error: any) {
+    console.error('createAuthor error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في إضافة الكاتب' };
+  }
+}
+
+export async function updateAuthor(
+  id: string,
+  payload: { name?: string; bio?: string; avatar_url?: string }
+) {
+  try {
+    await verifyAdminSession();
+    const updated = await prisma.authors.update({
+      where: { id: BigInt(id) },
+      data: {
+        ...(payload.name !== undefined && { name: payload.name.trim() }),
+        ...(payload.bio !== undefined && { bio: payload.bio.trim() || null }),
+        ...(payload.avatar_url !== undefined && { avatar_url: payload.avatar_url.trim() || null }),
+      },
+    });
+    revalidatePath('/admin/authors');
+    return { success: true, data: serialize(updated) };
+  } catch (error: any) {
+    console.error('updateAuthor error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في تحديث الكاتب' };
+  }
+}
+
+export async function deleteAuthor(id: string) {
+  try {
+    await verifyAdminSession();
+    // author_id يصبح NULL في articles تلقائياً (ON DELETE SET NULL)
+    await prisma.authors.delete({ where: { id: BigInt(id) } });
+    revalidatePath('/admin/authors');
+    return { success: true };
+  } catch (error: any) {
+    console.error('deleteAuthor error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في حذف الكاتب' };
+  }
+}
+
+// نسخة محدّثة من createArticle تدعم author_id
+export async function createOpinion(payload: {
+  title: string;
+  slug?: string;
+  excerpt?: string;
+  content: string;
+  category_id?: string;
+  author_id?: string;
+  status?: string;
+}) {
+  try {
+    await verifyAdminSession();
+    const slug =
+      payload.slug?.trim() ||
+      payload.title
+        .trim()
+        .toLowerCase()
+        .replace(/[\s\W-]+/g, '-') + '-' + Date.now();
+
+    const created = await prisma.articles.create({
+      data: {
+        title: payload.title.trim(),
+        slug,
+        excerpt: payload.excerpt?.trim(),
+        content: payload.content.trim(),
+        category_id: payload.category_id ? BigInt(payload.category_id) : null,
+        author_id: payload.author_id ? BigInt(payload.author_id) : null,
+        status: payload.status || 'published',
+        is_featured: false,
+        published_at: payload.status === 'draft' ? null : new Date(),
+      },
+    });
+    revalidatePath('/admin/opinions');
+    revalidatePath('/category/reports');
+    return { success: true, data: serialize(created) };
+  } catch (error: any) {
+    console.error('createOpinion error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في إضافة المقال' };
+  }
+}
+
+export async function getAdminOpinions() {
+  try {
+    await verifyAdminSession();
+    const list = await prisma.articles.findMany({
+      where: { author_id: { not: null } },
+      include: { category: true, author: true },
+      orderBy: { created_at: 'desc' },
+    });
+    return { success: true, data: serialize(list) };
+  } catch (error: any) {
+    console.error('getAdminOpinions error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في جلب المقالات', data: [] };
+  }
+}
+
+export async function getAdminOpinionById(id: string) {
+  try {
+    await verifyAdminSession();
+    const article = await prisma.articles.findUnique({
+      where: { id: BigInt(id) },
+      include: { category: true, author: true },
+    });
+    if (!article) return { success: false, error: 'المقال غير موجود' };
+    return { success: true, data: serialize(article) };
+  } catch (error: any) {
+    console.error('getAdminOpinionById error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في جلب المقال' };
+  }
+}
+
+export async function updateOpinion(
+  id: string,
+  payload: {
+    title?: string;
+    excerpt?: string;
+    content?: string;
+    category_id?: string;
+    author_id?: string;
+    status?: string;
+  }
+) {
+  try {
+    await verifyAdminSession();
+    const dataToUpdate: any = {};
+    if (payload.title !== undefined) dataToUpdate.title = payload.title.trim();
+    if (payload.excerpt !== undefined) dataToUpdate.excerpt = payload.excerpt.trim() || null;
+    if (payload.content !== undefined) dataToUpdate.content = payload.content.trim();
+    if (payload.category_id !== undefined)
+      dataToUpdate.category_id = payload.category_id ? BigInt(payload.category_id) : null;
+    if (payload.author_id !== undefined)
+      dataToUpdate.author_id = payload.author_id ? BigInt(payload.author_id) : null;
+    if (payload.status !== undefined) {
+      dataToUpdate.status = payload.status;
+      if (payload.status === 'published') dataToUpdate.published_at = new Date();
+    }
+
+    const updated = await prisma.articles.update({
+      where: { id: BigInt(id) },
+      data: dataToUpdate,
+    });
+    revalidatePath('/admin/opinions');
+    revalidatePath('/category/reports');
+    revalidatePath(`/article/${updated.slug}`);
+    return { success: true, data: serialize(updated) };
+  } catch (error: any) {
+    console.error('updateOpinion error:', error?.message);
+    return { success: false, error: error?.message || 'فشل في تحديث المقال' };
+  }
+}
+
+// -------------------------------------------------------------
+// 7. نظرة عامة (Overview Stats)
 // -------------------------------------------------------------
 export async function getAdminOverviewCounts() {
   try {

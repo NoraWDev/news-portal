@@ -74,8 +74,8 @@ export default function Footer() {
                 <div className="w-6 h-6 shrink-0 rounded-full border border-[#7a1a26]/80 flex items-center justify-center text-white">
                   <FaEnvelope className="text-[10px]" />
                 </div>
-                <a href="mailto:info@rasdnews.com" dir="ltr" className="hover:text-white transition break-all">
-                  info@rasdnews.com
+                <a href="mailto:ajrasalyemen.news@gmail.com" dir="ltr" className="hover:text-white transition break-all">
+                  ajrasalyemen.news@gmail.com
                 </a>
               </div>
             </div>
@@ -115,8 +115,9 @@ export default function Footer() {
             <ul className="grid grid-cols-2 gap-x-5 gap-y-2 text-[11px] md:text-xs text-gray-300">
               <li><Link href="/" className="hover:text-white transition flex items-center gap-1"><span className="text-[#7a1a26]">‹</span> الرئيسية</Link></li>
               <li><Link href="/about" className="hover:text-white transition flex items-center gap-1"><span className="text-[#7a1a26]">‹</span> من نحن</Link></li>
-              <li><Link href="/privacy" className="hover:text-white transition flex items-center gap-1"><span className="text-[#7a1a26]">‹</span> سياسة الخصوصية</Link></li>
               <li><Link href="/contact" className="hover:text-white transition flex items-center gap-1"><span className="text-[#7a1a26]">‹</span> تواصل معنا</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition flex items-center gap-1"><span className="text-[#7a1a26]">‹</span> سياسة الخصوصية</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition flex items-center gap-1"><span className="text-[#7a1a26]">‹</span> شروط الاستخدام</Link></li>
             </ul>
             <div className="flex items-center gap-2 mt-4 mb-2.5">
               <span className="w-6 h-[2px] bg-[#7a1a26]" />

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 
 import { 
@@ -21,26 +22,56 @@ import {
 } from 'react-icons/fa';
 
 import { FaXTwitter } from 'react-icons/fa6';
+import { getBreakingNews, type BreakingNewsItem } from '@/app/actions/breaking-news';
 
-export default function Header() {
+type HeaderProps = {
+  initialBreakingNews?: BreakingNewsItem[];
+};
+
+export default function Header({ initialBreakingNews }: HeaderProps = {}) {
+  const pathname = usePathname();
+  const [breakingNews, setBreakingNews] = useState<BreakingNewsItem[]>(initialBreakingNews || []);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!initialBreakingNews || initialBreakingNews.length === 0) {
+      getBreakingNews()
+        .then((items) => {
+          if (isMounted) setBreakingNews(items);
+        })
+        .catch((err) => {
+          console.error('[Header] Failed to load breaking news:', err?.message);
+        });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [initialBreakingNews]);
+
   const categories = [
-    { name: 'سياسة', slug: 'politics' },
-    { name: 'محليات', slug: 'local' },
-    { name: 'اقتصاد', slug: 'economy' },
-    { name: 'دولي', slug: 'world' },
-    { name: 'ثقافة', slug: 'culture' },
-    { name: 'قضايا', slug: 'issues' },
-    { name: 'التقارير', slug: 'reports' },
+    { name: 'سياسة', slug: 'politics', href: '/category/politics' },
+    { name: 'محليات', slug: 'local', href: '/category/local' },
+    { name: 'اقتصاد', slug: 'economy', href: '/category/economy' },
+    { name: 'دولي', slug: 'world', href: '/category/world' },
+    { name: 'ثقافة', slug: 'culture', href: '/category/culture' },
+    { name: 'قضايا', slug: 'issues', href: '/category/issues' },
+    { name: 'التقارير', slug: 'reports', href: '/category/reports' },
+    { name: 'المقالات', slug: 'opinions', href: '/opinions' },
   ];
   
   const moreCategories = [
-    { name: 'الصحة', slug: 'health' },
-    { name: 'المجتمع', slug: 'society' },
-    { name: 'الرياضة', slug: 'sports' },
-    { name: 'تكنولوجيا', slug: 'technology' },
-    { name: 'محافظات', slug: 'governorates' },
-    { name: 'تحقيقات', slug: 'investigations' },
+    { name: 'الصحة', slug: 'health', href: '/category/health' },
+    { name: 'المجتمع', slug: 'society', href: '/category/society' },
+    { name: 'الرياضة', slug: 'sports', href: '/category/sports' },
+    { name: 'تكنولوجيا', slug: 'technology', href: '/category/technology' },
+    { name: 'محافظات', slug: 'governorates', href: '/category/governorates' },
+    { name: 'تحقيقات', slug: 'investigations', href: '/category/investigations' },
   ];
+
+  const isHomeActive = pathname === '/';
+  const isNavActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + '/');
+  const isMoreActive = moreCategories.some((cat) => isNavActive(cat.href));
 
   const socialLinks = [
     { Icon: FaXTwitter, href: '#', label: 'إكس' },
@@ -170,15 +201,18 @@ export default function Header() {
               ))}
             </div>
 
-            <div className="relative min-w-[105px] sm:min-w-[150px] md:min-w-[180px]">
+            <form action="/search" method="GET" className="relative min-w-[105px] sm:min-w-[150px] md:min-w-[180px]">
               <input 
                 type="text" 
+                name="q"
                 dir="rtl"
                 placeholder="ابحث..." 
                 className="w-full bg-[#18191d] border border-neutral-700 rounded-full py-0.5 sm:py-1 pr-2.5 sm:pr-3 pl-7 sm:pl-8 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-neutral-500"
               />
-              <FaSearch className="absolute left-2 sm:left-2.5 top-1.5 sm:top-2 text-gray-400 text-xs" />
-            </div>
+              <button type="submit" aria-label="تنفيذ البحث" className="absolute left-2 sm:left-2.5 top-1.5 sm:top-2 text-gray-400 hover:text-white transition cursor-pointer">
+                <FaSearch className="text-xs" />
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -186,27 +220,45 @@ export default function Header() {
       {/* 3. شريط الأقسام (نسخة الكمبيوتر) */}
       <nav className="hidden lg:block bg-[#000000] border-b border-[#5c131d]/40" dir="rtl">
         <div className="max-w-7xl mx-auto px-6 relative z-50">
-          <div className="flex items-center justify-center gap-8 md:gap-12 py-3 w-full overflow-visible relative z-50">
-            <Link href="/" className="flex items-center gap-2 text-white pb-1 border-b-2 border-[#7a1a26] whitespace-nowrap">
+          <div className="flex items-center justify-center gap-6 xl:gap-9 lg:gap-7 py-3 w-full overflow-visible relative z-50">
+            <Link
+              href="/"
+              className={`flex items-center gap-2 pb-1 border-b-2 transition whitespace-nowrap ${
+                isHomeActive
+                  ? 'text-white border-[#7a1a26]'
+                  : 'text-gray-300 hover:text-white border-transparent hover:border-[#7a1a26]/50'
+              }`}
+            >
               <FaHome className="text-lg" />
               <span className="text-sm md:text-base font-bold">الرئيسية</span>
             </Link>
 
-            {categories.map((cat, idx) => (
-              <Link
-                key={idx}
-                href={`/category/${cat.slug}`}
-                className="flex items-center gap-1.5 text-white hover:text-[#7a1a26] transition whitespace-nowrap text-sm md:text-base font-semibold"
-              >
-                <span>{cat.name}</span>
-              </Link>
-            ))}
+            {categories.map((cat, idx) => {
+              const active = isNavActive(cat.href);
+              return (
+                <Link
+                  key={idx}
+                  href={cat.href}
+                  className={`flex items-center gap-1.5 pb-1 border-b-2 transition whitespace-nowrap text-sm md:text-base font-semibold ${
+                    active
+                      ? 'text-white border-[#7a1a26]'
+                      : 'text-gray-300 hover:text-white border-transparent hover:border-[#7a1a26]/50'
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                </Link>
+              );
+            })}
 
             <div ref={moreRef} className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setIsMoreOpen(!isMoreOpen)}
-                className="flex items-center gap-1.5 text-white hover:text-[#7a1a26] transition whitespace-nowrap text-sm md:text-base font-semibold cursor-pointer"
+                className={`flex items-center gap-1.5 pb-1 border-b-2 transition whitespace-nowrap text-sm md:text-base font-semibold cursor-pointer ${
+                  isMoreActive
+                    ? 'text-white border-[#7a1a26]'
+                    : 'text-gray-300 hover:text-white border-transparent hover:border-[#7a1a26]/50'
+                }`}
               >
                 <span>المزيد</span>
                 <FaAngleDown className={`text-xs transition-transform duration-200 ${isMoreOpen ? 'rotate-180' : ''}`} />
@@ -214,17 +266,24 @@ export default function Header() {
 
               {isMoreOpen && (
                 <div className="absolute right-0 top-full mt-3 w-48 bg-[#0c0d10] border border-[#5c131d]/60 rounded-lg shadow-2xl overflow-hidden z-50">
-                  {moreCategories.map((cat, idx) => (
-                    <Link
-                      key={idx}
-                      href={`/category/${cat.slug}`}
-                      onClick={() => setIsMoreOpen(false)}
-                      className="flex items-center justify-between px-4 py-3 text-white text-xs font-bold hover:bg-[#5c131d] hover:text-white transition border-b border-white/5 last:border-b-0"
-                    >
-                      <span>{cat.name}</span>
-                      <span className="text-[#7a1a26]">‹</span>
-                    </Link>
-                  ))}
+                  {moreCategories.map((cat, idx) => {
+                    const active = isNavActive(cat.href);
+                    return (
+                      <Link
+                        key={idx}
+                        href={cat.href}
+                        onClick={() => setIsMoreOpen(false)}
+                        className={`flex items-center justify-between px-4 py-3 text-xs font-bold transition border-b border-white/5 last:border-b-0 ${
+                          active
+                            ? 'bg-[#7a1a26] text-white'
+                            : 'text-white hover:bg-[#5c131d] hover:text-white'
+                        }`}
+                      >
+                        <span>{cat.name}</span>
+                        <span className={active ? 'text-white' : 'text-[#7a1a26]'}>‹</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -250,19 +309,30 @@ export default function Header() {
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 px-0.5 text-xs">
             <Link
               href="/"
-              className="whitespace-nowrap px-2 py-0.5 rounded text-white font-bold bg-[#7a1a26] text-[10px] sm:text-[11px]"
+              className={`whitespace-nowrap px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold transition ${
+                isHomeActive
+                  ? 'text-white bg-[#7a1a26]'
+                  : 'text-gray-300 hover:text-white hover:bg-neutral-800'
+              }`}
             >
               الرئيسية
             </Link>
-            {categories.slice(0, 4).map((cat, idx) => (
-              <Link
-                key={idx}
-                href={`/category/${cat.slug}`}
-                className="whitespace-nowrap px-1.5 py-0.5 rounded text-gray-300 hover:text-white hover:bg-neutral-800 text-[10px] sm:text-[11px] font-medium transition"
-              >
-                {cat.name}
-              </Link>
-            ))}
+            {categories.map((cat, idx) => {
+              const active = isNavActive(cat.href);
+              return (
+                <Link
+                  key={idx}
+                  href={cat.href}
+                  className={`whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] transition ${
+                    active
+                      ? 'text-white bg-[#7a1a26] font-bold'
+                      : 'text-gray-300 hover:text-white hover:bg-neutral-800 font-medium'
+                  }`}
+                >
+                  {cat.name}
+                </Link>
+              );
+            })}
           </div>
 
           {/* زر البحث للجوال */}
@@ -283,16 +353,19 @@ export default function Header() {
         {/* حقل البحث السريع المنسدل */}
         {isMobileSearchOpen && (
           <div className="mt-1.5 pt-1.5 border-t border-neutral-800">
-            <div className="relative w-full">
+            <form action="/search" method="GET" onSubmit={() => setIsMobileSearchOpen(false)} className="relative w-full">
               <input
                 type="text"
+                name="q"
                 dir="rtl"
                 placeholder="ابحث عن خبر، مقال، أو موضوع..."
                 className="w-full bg-[#14151a] border border-[#5c131d]/70 rounded-md py-1.5 pr-2.5 pl-8 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#7a1a26]"
                 autoFocus
               />
-              <FaSearch className="absolute left-2.5 top-2 text-gray-400 text-xs" />
-            </div>
+              <button type="submit" aria-label="بحث" className="absolute left-2.5 top-2 text-gray-400 hover:text-white transition cursor-pointer">
+                <FaSearch className="text-xs" />
+              </button>
+            </form>
           </div>
         )}
       </nav>
@@ -327,15 +400,18 @@ export default function Header() {
 
             {/* حقل البحث داخل القائمة */}
             <div className="p-3 border-b border-neutral-800 bg-[#0e0f14]">
-              <div className="relative">
+              <form action="/search" method="GET" onSubmit={() => setIsMobileMenuOpen(false)} className="relative">
                 <input
                   type="text"
+                  name="q"
                   dir="rtl"
                   placeholder="ابحث في الموقع..."
                   className="w-full bg-[#17181f] border border-neutral-700 rounded-lg py-2 pr-3 pl-8 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#7a1a26]"
                 />
-                <FaSearch className="absolute left-2.5 top-2.5 text-gray-400 text-xs" />
-              </div>
+                <button type="submit" aria-label="بحث" className="absolute left-2.5 top-2.5 text-gray-400 hover:text-white transition cursor-pointer">
+                  <FaSearch className="text-xs" />
+                </button>
+              </form>
             </div>
 
             {/* محتوى الروابط القابل للتمرير */}
@@ -349,26 +425,37 @@ export default function Header() {
                   <Link
                     href="/"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-[#7a1a26]/20 text-white font-bold text-xs border border-[#7a1a26]/40 transition hover:bg-[#7a1a26]"
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold border transition ${
+                      isHomeActive
+                        ? 'bg-[#7a1a26] text-white border-[#7a1a26]'
+                        : 'bg-[#7a1a26]/10 text-gray-200 border-[#7a1a26]/20 hover:bg-[#7a1a26]/30 hover:text-white'
+                    }`}
                   >
                     <div className="flex items-center gap-2">
-                      <FaHome className="text-sm text-[#d4737f]" />
+                      <FaHome className={`text-sm ${isHomeActive ? 'text-white' : 'text-[#d4737f]'}`} />
                       <span>الصفحة الرئيسية</span>
                     </div>
-                    <span className="text-xs text-[#d4737f]">‹</span>
+                    <span className={`text-xs ${isHomeActive ? 'text-white' : 'text-[#d4737f]'}`}>‹</span>
                   </Link>
 
-                  {categories.map((cat, idx) => (
-                    <Link
-                      key={idx}
-                      href={`/category/${cat.slug}`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-200 hover:text-white hover:bg-neutral-800/60 font-semibold text-xs transition"
-                    >
-                      <span>{cat.name}</span>
-                      <span className="text-neutral-500 text-xs">‹</span>
-                    </Link>
-                  ))}
+                  {categories.map((cat, idx) => {
+                    const active = isNavActive(cat.href);
+                    return (
+                      <Link
+                        key={idx}
+                        href={cat.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold border transition ${
+                          active
+                            ? 'bg-[#7a1a26] text-white font-bold border-[#7a1a26]'
+                            : 'text-gray-200 border-transparent hover:text-white hover:bg-neutral-800/60'
+                        }`}
+                      >
+                        <span>{cat.name}</span>
+                        <span className={`text-xs ${active ? 'text-white' : 'text-neutral-500'}`}>‹</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -378,17 +465,24 @@ export default function Header() {
                   المزيد من التصنيفات
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
-                  {moreCategories.map((cat, idx) => (
-                    <Link
-                      key={idx}
-                      href={`/category/${cat.slug}`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#14151a] hover:bg-[#7a1a26]/30 text-gray-300 hover:text-white text-[11px] font-semibold border border-neutral-800/80 transition"
-                    >
-                      <span>{cat.name}</span>
-                      <span className="text-[#7a1a26] text-[10px]">‹</span>
-                    </Link>
-                  ))}
+                  {moreCategories.map((cat, idx) => {
+                    const active = isNavActive(cat.href);
+                    return (
+                      <Link
+                        key={idx}
+                        href={cat.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-semibold border transition ${
+                          active
+                            ? 'bg-[#7a1a26] text-white border-[#7a1a26]'
+                            : 'bg-[#14151a] hover:bg-[#7a1a26]/30 text-gray-300 hover:text-white border-neutral-800/80'
+                        }`}
+                      >
+                        <span>{cat.name}</span>
+                        <span className={`text-[10px] ${active ? 'text-white' : 'text-[#7a1a26]'}`}>‹</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -429,35 +523,40 @@ export default function Header() {
         </div>
       )}
 
-      {/* 4. شريط الأخبار العاجلة (مدمج ورشيق على الجوال، ويحافظ على أبعاده للكمبيوتر) */}
-      <div className="bg-[#f8fafc] text-gray-900" dir="rtl">
-        <div className="py-1 sm:py-2 md:py-4 px-2 sm:px-4 md:px-6">
-          <div className="max-w-7xl mx-auto bg-[#7a1a26] flex items-center text-white shadow-sm rounded-md overflow-hidden">
-            <div className="bg-[#000000] px-2.5 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <FaBolt className="text-[#f9f9f9] animate-pulse text-xs sm:text-base md:text-xl" />
-              <span className="text-white font-extrabold text-xs sm:text-base md:text-2xl">عاجل</span>
-            </div>
-            
-            <div className="flex-1 overflow-hidden px-2 sm:px-4 relative flex items-center">
-              <div className="whitespace-nowrap inline-block animate-[marquee_25s_linear_infinite] hover:[animation-play-state:paused]">
-                <span className="text-[11px] sm:text-sm md:text-lg font-semibold text-white px-2 sm:px-4">
-                  الحكومة اليمنية تؤكد استمرار جهودها لتحقيق السلام الشامل في اليمن
-                </span>
-                <span className="text-white font-bold opacity-70">|</span>
-                <span className="text-[11px] sm:text-sm md:text-lg font-semibold text-white px-2 sm:px-4">
-                  الجيش اليمني يعلن تنفيذ عملية نوعية ضد مواقع للحوثيين في الجوف
+      {/* 4. شريط الأخبار العاجلة المرتبط بقاعدة البيانات */}
+      {breakingNews.length > 0 && (
+        <div className="bg-[#f8fafc] text-gray-900 border-b border-gray-200/60 overflow-hidden" dir="rtl">
+          <div className="max-w-[1400px] mx-auto py-1 sm:py-1.5 md:py-2 px-2 sm:px-4 md:px-6">
+            <div className="bg-[#7a1a26] flex items-center text-white shadow-sm rounded-lg overflow-hidden border border-[#5c131d]/30 relative">
+              {/* شارة عاجل */}
+              <div className="bg-[#0b0c10] px-2.5 sm:px-3.5 md:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 z-10 border-l border-white/10 select-none shadow-[2px_0_12px_rgba(0,0,0,0.35)]">
+                <FaBolt className="text-red-500 animate-pulse text-xs sm:text-sm shrink-0" />
+                <span className="text-white font-black text-xs sm:text-sm tracking-wide">
+                  عاجل
                 </span>
               </div>
-            </div>
 
-            <div className="flex items-center gap-1 px-1.5 sm:px-2 md:px-3 border-l border-black/40 shrink-0">
-              <button className="p-0.5 sm:p-1 hover:bg-black/30 rounded transition text-xs sm:text-sm" aria-label="التالي">
-                <FaChevronLeft />
-              </button>
+              {/* مسار العناوين المتحركة */}
+              <div className="flex-1 overflow-hidden px-2 sm:px-3 relative flex items-center min-w-0">
+                <div className="whitespace-nowrap flex items-center gap-6 sm:gap-8 animate-ticker-rtl hover:[animation-play-state:paused] motion-reduce:animate-none">
+                  {/* تكرار العناوين لضمان انسيابية واستمرارية الحركة */}
+                  {[...breakingNews, ...breakingNews].map((item, index) => (
+                    <div key={`${item.id}-${index}`} className="flex items-center gap-6 sm:gap-8 shrink-0">
+                      <Link
+                        href={`/article/${item.slug}`}
+                        className="text-white hover:text-[#ffd1d6] transition text-[11px] sm:text-xs md:text-sm font-semibold hover:underline"
+                      >
+                        {item.title}
+                      </Link>
+                      <span className="text-white/40 text-xs select-none">•</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }

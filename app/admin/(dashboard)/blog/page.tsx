@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { getAdminArticles, deleteArticle } from "@/app/admin/actions";
+import { getAdminArticles, deleteArticle, toggleBreakingArticle } from "@/app/admin/actions";
 import {
   IconPlus,
   IconSearch,
@@ -18,6 +18,7 @@ import {
   IconWorld,
   IconClipboardText,
   IconMessages,
+  IconBolt,
 } from "@tabler/icons-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -56,6 +57,8 @@ type Post = {
   views: number;
   comments: number;
   gradient: string;
+  isFeatured?: boolean;
+  isBreaking?: boolean;
 };
 
 const statusStyles: Record<PostStatus, string> = {
@@ -217,11 +220,26 @@ export default function BlogPage() {
           views: Number(item.views_count || 0),
           comments: Number(item.comments_count || 0),
           gradient: gradient((idx % 5) + 1, ((idx + 1) % 5) + 1),
+          isFeatured: !!item.is_featured,
+          isBreaking: !!item.is_breaking,
         }));
         setRows(dbRows);
       }
     });
   }, []);
+
+  async function handleToggleBreaking(id: string, current: boolean) {
+    const nextVal = !current;
+    const res = await toggleBreakingArticle(id, nextVal);
+    if (res.success) {
+      setRows((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, isBreaking: nextVal } : r))
+      );
+      toast.success(nextVal ? "تم تحديد الخبر كخبر عاجل" : "تم إلغاء صفة العاجل عن الخبر");
+    } else {
+      toast.error("فشل في تحديث حالة الخبر العاجل", { description: res.error });
+    }
+  }
 
   const deleting = rows.find((p) => p.id === deleteId) ?? null;
 
@@ -372,12 +390,26 @@ export default function BlogPage() {
               </div>
               <CardContent className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <Link
-                    href="/admin/blog/new"
-                    className="line-clamp-2 font-semibold leading-snug tracking-tight hover:underline"
-                  >
-                    {p.title}
-                  </Link>
+                  <div className="space-y-1">
+                    <Link
+                      href={`/admin/blog/${p.id}/edit`}
+                      className="line-clamp-2 font-semibold leading-snug tracking-tight hover:underline"
+                    >
+                      {p.title}
+                    </Link>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {p.isBreaking && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/15 text-red-600 border border-red-500/30">
+                          ⚡ عاجل
+                        </span>
+                      )}
+                      {p.isFeatured && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-700 border border-amber-500/30">
+                          ★ رئيسي
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -389,11 +421,17 @@ export default function BlogPage() {
                         <span className="sr-only">إجراءات الخبر</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuContent align="end" className="w-44">
                       <DropdownMenuItem asChild>
-                        <Link href="/admin/blog/new">
+                        <Link href={`/admin/blog/${p.id}/edit`}>
                           <IconPencil className="size-4" /> تعديل
                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={() => handleToggleBreaking(p.id, !!p.isBreaking)}
+                      >
+                        <IconBolt className="size-4 text-red-600" />
+                        {p.isBreaking ? "إلغاء صفة العاجل" : "تحديد كخبر عاجل"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={() =>
@@ -463,8 +501,26 @@ export default function BlogPage() {
 
               <tbody>
                 {filtered.map((p) => (
-                  <tr key={p.id} className="border-b last:border-0">
-                    <td className="p-4 font-medium">{p.title}</td>
+                  <tr key={p.id} className="border-b last:border-0 hover:bg-muted/20 transition">
+                    <td className="p-4 font-medium">
+                      <div className="flex flex-col gap-1 max-w-md">
+                        <Link href={`/admin/blog/${p.id}/edit`} className="line-clamp-2 hover:underline">
+                          {p.title}
+                        </Link>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {p.isBreaking && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/15 text-red-600 border border-red-500/30">
+                              ⚡ عاجل
+                            </span>
+                          )}
+                          {p.isFeatured && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-700 border border-amber-500/30">
+                              ★ رئيسي
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
                     <td className="p-4">{p.category}</td>
                     <td className="p-4">{p.author}</td>
                     <td className="p-4">{p.views.toLocaleString()}</td>
@@ -475,20 +531,18 @@ export default function BlogPage() {
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() =>
-                            toast.success("تم نسخ الرابط", {
-                              description: "تم نسخ رابط الخبر إلى الحافظة.",
-                            })
-                          }
+                          title={p.isBreaking ? "إلغاء صفة العاجل" : "تحديد كخبر عاجل"}
+                          onClick={() => handleToggleBreaking(p.id, !!p.isBreaking)}
+                          className={p.isBreaking ? "text-red-600 hover:text-red-700 hover:bg-red-50" : "text-muted-foreground hover:text-red-600"}
                         >
-                          <IconEye className="size-4" />
+                          <IconBolt className="size-4" />
                         </Button>
 
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button variant="ghost" size="icon" asChild title="تعديل">
                           <Link href={`/admin/blog/${p.id}/edit`}>
                             <IconPencil className="size-4" />
                           </Link>
@@ -497,6 +551,7 @@ export default function BlogPage() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          title="حذف"
                           onClick={() => setDeleteId(p.id)}
                         >
                           <IconTrash className="size-4" />

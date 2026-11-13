@@ -49,6 +49,7 @@ export default function NewPostPage() {
   const [featuredImage, setFeaturedImage] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
   const [isFeatured, setIsFeatured] = useState<boolean>(false);
+  const [isBreaking, setIsBreaking] = useState<boolean>(false);
   const [categoriesList, setCategoriesList] = useState<{ id: string; name: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -79,6 +80,7 @@ export default function NewPostPage() {
       category_id: categoryId || undefined,
       featured_image: featuredImage.trim() || undefined,
       is_featured: isFeatured,
+      is_breaking: isBreaking,
       status,
     });
     setIsSubmitting(false);
@@ -211,6 +213,26 @@ export default function NewPostPage() {
                     <span className="text-sm font-bold text-foreground block">تعيين كخبر رئيسي</span>
                     <span className="text-xs text-muted-foreground block mt-0.5 leading-relaxed">
                       عند التفعيل، سيظهر هذا الخبر في أعلى الصفحة الرئيسية كخبر رئيسي للموقع مع استبدال الخبر الرئيسي السابق.
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* خيار تعيين كخبر عاجل */}
+              <div className="pt-3 border-t border-border/60">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 cursor-pointer transition">
+                  <input
+                    type="checkbox"
+                    checked={isBreaking}
+                    onChange={(e) => setIsBreaking(e.target.checked)}
+                    className="mt-1 size-4 rounded border-red-300 text-red-600 focus:ring-red-600 cursor-pointer"
+                  />
+                  <div className="flex-1 select-none">
+                    <span className="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                      <span>⚡</span> تعيين كخبر عاجل
+                    </span>
+                    <span className="text-xs text-muted-foreground block mt-0.5 leading-relaxed">
+                      عند التفعيل، سيظهر هذا الخبر في شريط الأخبار العاجلة أعلى الموقع فور نشره.
                     </span>
                   </div>
                 </label>
